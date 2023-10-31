@@ -8,7 +8,8 @@
   "mixins": [
   ],
   "client": [
-    "client.MultiPlayerGameModeMixin"
+    "client.MultiPlayerGameModeMixin",
+    "client.accessor.BlockModelAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

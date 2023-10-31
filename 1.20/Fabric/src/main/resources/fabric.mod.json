@@ -27,6 +27,9 @@
     ],
     "client": [
       "${clientEntryPoint}"
+    ],
+    "cardinal-components": [
+      "fuzs.puzzleslib.api.capability.v2.initializer.EntityComponentInitializerImpl"
     ]
   },
 
@@ -41,5 +44,11 @@
     "puzzleslib": ">=${minPuzzlesVersion}",
     "minecraft": "${minecraftVersion}",
     "java": ">=17"
+  },
+
+  "custom": {
+    "cardinal-components": [
+      "${modId}:hit_vector"
+    ]
   }
 }

@@ -46,14 +46,14 @@ public class DiagonalBlockHandler {
         for (Map.Entry<ResourceKey<Item>, Item> entry : BuiltInRegistries.ITEM.entrySet()) {
             if (entry.getValue() instanceof BlockItem blockItem) {
                 Block block = blockItem.getBlock();
-                setItemForBlock(entry.getKey().location(), blockItem, block);
+                setItemForBlock(blockItem, block);
                 setBlockForItem(blockItem, block);
             }
         }
         copyBoundTags();
     }
 
-    private static void setItemForBlock(ResourceLocation resourceLocation, BlockItem blockItem, Block block) {
+    private static void setItemForBlock(BlockItem blockItem, Block block) {
         // item id should be fine to use for block items
         if (isTarget(block)) {
             BlockConversionHelper.setItemForBlock(BLOCK_CONVERSIONS.get(block), blockItem);

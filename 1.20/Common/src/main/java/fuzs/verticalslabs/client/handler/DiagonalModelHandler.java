@@ -8,6 +8,7 @@ import com.mojang.math.Transformation;
 import fuzs.puzzleslib.api.event.v1.core.EventResultHolder;
 import fuzs.verticalslabs.VerticalSlabs;
 import fuzs.verticalslabs.handler.DiagonalBlockHandler;
+import fuzs.verticalslabs.mixin.client.accessor.BlockModelAccessor;
 import fuzs.verticalslabs.world.level.block.RotatedSlabBlock;
 import net.minecraft.Util;
 import net.minecraft.client.renderer.block.BlockModelShaper;
@@ -24,11 +25,11 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.level.block.state.properties.SlabType;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -71,14 +72,17 @@ public class DiagonalModelHandler {
         ModelConversionData data = MODEL_LOCATION_DATA.get().get(modelLocation);
         if (data != null) {
             if (modelGetter.apply(data.resourceLocation()) instanceof MultiVariant multiVariant) {
+                UnbakedModel unbakedModel1 = modelGetter.apply(data.doubleReference());
+                UnbakedModel unbakedModel2 = modelGetter.apply(((MultiVariant) unbakedModel1).getVariants().get(0).getModelLocation());
+                boolean uvLock = ((BlockModelAccessor) unbakedModel2).verticalslabs$getParentLocation().equals(new ResourceLocation("block/cube_all"));
                 List<Variant> variants = Lists.newArrayList();
                 for (Variant variant : multiVariant.getVariants()) {
                     Transformation transformation = switch (data.axis) {
-                        case Y -> variant.getRotation();
+                        case Y -> BlockModelRotation.X0_Y0.getRotation();
                         case Z -> BlockModelRotation.X270_Y0.getRotation();
                         case X -> BlockModelRotation.X90_Y90.getRotation();
                     };
-                    variants.add(new Variant(variant.getModelLocation(), transformation, true, variant.getWeight()));
+                    variants.add(new Variant(variant.getModelLocation(), transformation, uvLock, variant.getWeight()));
                 }
                 return EventResultHolder.interrupt(new MultiVariant(variants));
             }
@@ -86,22 +90,6 @@ public class DiagonalModelHandler {
                 VerticalSlabs.LOGGER.warn("Block '{}' is not using multi variant model, in-game model will not be visible!", resourceLocation);
             }
         }
-
-//        Block slabBlock = BASE_BLOCKS_BY_DIAGONAL_LOCATION.get().get(resourceLocation);
-//        if (slabBlock != null) {
-//            Block verticalSlabBlock = DiagonalBlockHandler.BLOCK_CONVERSIONS.get(slabBlock);
-//            Objects.requireNonNull(verticalSlabBlock, "vertical slab block is null");
-//            // the unbaked model is the same for every possible block state for a block, so it's good enough to just pick out the 'any' base state
-//            ModelResourceLocation modelResourceLocation = convertAnyBlockState(verticalSlabBlock, slabBlock);
-//            if (modelGetter.apply(modelResourceLocation) instanceof MultiVariant multiVariant) {
-//                UnbakedModel newModel = multiVariant;
-////                UNBAKED_MODEL_CACHE.put(resourceLocation, newModel);
-//                return EventResultHolder.interrupt(newModel);
-//            }
-//            if (REPORTED_BLOCKS.add(resourceLocation)) {
-//                VerticalSlabs.LOGGER.warn("Block '{}' is not using multi variant model, in-game model will not be visible!", resourceLocation);
-//            }
-//        }
         return EventResultHolder.pass();
     }
 
@@ -131,10 +119,10 @@ public class DiagonalModelHandler {
         UNBAKED_MODEL_CACHE.clear();
     }
 
-    private record ModelConversionData(ResourceLocation resourceLocation, Direction.Axis axis) {
+    private record ModelConversionData(ResourceLocation resourceLocation, Direction.Axis axis, ResourceLocation doubleReference) {
 
         public ModelConversionData(BlockState oldBlockState, BlockState newBlockState) {
-            this(BlockModelShaper.stateToModelLocation(newBlockState), oldBlockState.getValue(RotatedSlabBlock.AXIS));
+            this(BlockModelShaper.stateToModelLocation(newBlockState), oldBlockState.getValue(RotatedSlabBlock.AXIS), newBlockState.getValue(RotatedSlabBlock.TYPE) == SlabType.DOUBLE ? BlockModelShaper.stateToModelLocation(newBlockState) : BlockModelShaper.stateToModelLocation(newBlockState.getBlock().getStateDefinition().any().setValue(RotatedSlabBlock.TYPE, SlabType.DOUBLE)));
         }
     }
 }

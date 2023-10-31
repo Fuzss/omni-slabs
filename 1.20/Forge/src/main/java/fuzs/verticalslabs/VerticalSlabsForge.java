@@ -1,9 +1,12 @@
 package fuzs.verticalslabs;
 
+import fuzs.puzzleslib.api.capability.v2.ForgeCapabilityHelper;
 import fuzs.puzzleslib.api.core.v1.ModConstructor;
+import fuzs.verticalslabs.init.ModRegistry;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
+import net.minecraftforge.common.capabilities.CapabilityToken;
 import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -19,6 +22,13 @@ public class VerticalSlabsForge {
     @SubscribeEvent
     public static void onConstructMod(final FMLConstructModEvent evt) {
         ModConstructor.construct(VerticalSlabs.MOD_ID, VerticalSlabs::new);
+        registerCapabilities();
+    }
+
+    private static void registerCapabilities() {
+        ForgeCapabilityHelper.setCapabilityToken(ModRegistry.HIT_VECTOR_CAPABILITY, new CapabilityToken<>() {
+            // NO-OP
+        });
     }
 
     @SubscribeEvent

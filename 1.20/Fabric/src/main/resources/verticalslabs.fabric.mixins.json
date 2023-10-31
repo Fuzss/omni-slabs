@@ -6,6 +6,7 @@
   "refmap": "verticalslabs.refmap.json",
   "plugin": "fuzs.verticalslabs.mixin.ModMixinConfigPlugin",
   "mixins": [
+    "ServerPlayerGameModeFabricMixin"
   ],
   "client": [
     "client.BlockRenderDispatcherFabricMixin"
