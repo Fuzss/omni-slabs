@@ -8,7 +8,6 @@ import com.mojang.math.Transformation;
 import fuzs.puzzleslib.api.event.v1.core.EventResultHolder;
 import fuzs.verticalslabs.VerticalSlabs;
 import fuzs.verticalslabs.handler.DiagonalBlockHandler;
-import fuzs.verticalslabs.mixin.client.accessor.BlockModelAccessor;
 import fuzs.verticalslabs.world.level.block.RotatedSlabBlock;
 import net.minecraft.Util;
 import net.minecraft.client.renderer.block.BlockModelShaper;
@@ -20,8 +19,10 @@ import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.client.resources.model.UnbakedModel;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.data.models.model.ModelLocationUtils;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.Property;
@@ -36,6 +37,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class DiagonalModelHandler {
+    public static final ResourceLocation BUILT_IN_MODEL_LOCATION = ModelLocationUtils.getModelLocation(Blocks.STONE);
     private static final Supplier<Map<ResourceLocation, Block>> BASE_BLOCKS_BY_DIAGONAL_LOCATION;
     private static final Map<ResourceLocation, UnbakedModel> UNBAKED_MODEL_CACHE = Maps.newConcurrentMap();
     private static final Supplier<Map<ResourceLocation, ModelConversionData>> MODEL_LOCATION_DATA;
@@ -66,31 +68,32 @@ public class DiagonalModelHandler {
     }
 
     public static EventResultHolder<UnbakedModel> onModifyUnbakedModel(ResourceLocation modelLocation, Supplier<UnbakedModel> unbakedModel, Function<ResourceLocation, UnbakedModel> modelGetter, BiConsumer<ResourceLocation, UnbakedModel> modelAdder) {
-        // ignore the unbaked model, it's just a dummy for preventing the model bakery from logging a missing model
-        ResourceLocation resourceLocation = new ResourceLocation(modelLocation.getNamespace(), modelLocation.getPath());
-//        if (UNBAKED_MODEL_CACHE.containsKey(resourceLocation)) return EventResultHolder.interrupt(UNBAKED_MODEL_CACHE.get(resourceLocation));
         ModelConversionData data = MODEL_LOCATION_DATA.get().get(modelLocation);
         if (data != null) {
-            if (modelGetter.apply(data.resourceLocation()) instanceof MultiVariant multiVariant) {
-                UnbakedModel unbakedModel1 = modelGetter.apply(data.doubleReference());
-                UnbakedModel unbakedModel2 = modelGetter.apply(((MultiVariant) unbakedModel1).getVariants().get(0).getModelLocation());
-                boolean uvLock = ((BlockModelAccessor) unbakedModel2).verticalslabs$getParentLocation().equals(new ResourceLocation("block/cube_all"));
+            if (modelGetter.apply(data.resourceLocation()) instanceof MultiVariant multiVariant && isBuiltInModel(unbakedModel.get())) {
                 List<Variant> variants = Lists.newArrayList();
                 for (Variant variant : multiVariant.getVariants()) {
                     Transformation transformation = switch (data.axis) {
-                        case Y -> BlockModelRotation.X0_Y0.getRotation();
+                        case Y -> variant.getRotation();
                         case Z -> BlockModelRotation.X270_Y0.getRotation();
                         case X -> BlockModelRotation.X90_Y90.getRotation();
+//                        case Z -> new Transformation(variant.getRotation().getMatrix().mul(BlockModelRotation.X270_Y0.getRotation().getMatrix()));
+//                        case X -> new Transformation(variant.getRotation().getMatrix().mul(BlockModelRotation.X90_Y90.getRotation().getMatrix()));
                     };
-                    variants.add(new Variant(variant.getModelLocation(), transformation, uvLock, variant.getWeight()));
+                    variants.add(new Variant(variant.getModelLocation(), transformation, false, variant.getWeight()));
                 }
                 return EventResultHolder.interrupt(new MultiVariant(variants));
             }
+            ResourceLocation resourceLocation = new ResourceLocation(modelLocation.getNamespace(), modelLocation.getPath());
             if (REPORTED_BLOCKS.add(resourceLocation)) {
                 VerticalSlabs.LOGGER.warn("Block '{}' is not using multi variant model, in-game model will not be visible!", resourceLocation);
             }
         }
         return EventResultHolder.pass();
+    }
+
+    private static boolean isBuiltInModel(UnbakedModel unbakedModel) {
+        return unbakedModel instanceof MultiVariant multiVariant && multiVariant.getVariants().size() == 1 && BUILT_IN_MODEL_LOCATION.equals(multiVariant.getVariants().get(0).getModelLocation());
     }
 
     public static ModelResourceLocation convertAnyBlockState(Block oldBlock, Block newBlock) {

@@ -1,14 +1,15 @@
 package fuzs.verticalslabs.world.level.block;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
 import fuzs.puzzleslib.api.shapes.v1.ShapesHelper;
+import fuzs.verticalslabs.init.ModRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
@@ -18,20 +19,29 @@ import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class RotatedSlabBlock extends SlabBlock {
     public static final EnumProperty<Direction.Axis> AXIS = BlockStateProperties.AXIS;
+    public static final VoxelShape[] INTERACTION_SHAPES;
     protected static final Map<Direction, VoxelShape> SHAPES = ShapesHelper.rotate(SlabBlock.TOP_AABB);
-    private static final BiMap<Direction, SlabTypeKey> DIRECTIONS = Stream.of(Direction.values()).collect(Collectors.toMap(Function.identity(), SlabTypeKey::new, (o1, o2) -> o1, HashBiMap::create));
+
+    static {
+        VoxelShape[] interactionShapes = new VoxelShape[8];
+        for (int i = 0; i < interactionShapes.length; i++) {
+            double startX = (i >> 0 & 1) == 1 ? 0.5 : 0.0;
+            double startY = (i >> 1 & 1) == 1 ? 0.5 : 0.0;
+            double startZ = (i >> 2 & 1) == 1 ? 0.5 : 0.0;
+            interactionShapes[i] = Shapes.box(startX, startY, startZ, startX + 0.5, startY + 0.5, startZ + 0.5);
+        }
+        INTERACTION_SHAPES = interactionShapes;
+    }
 
     private final Block block;
 
@@ -44,44 +54,27 @@ public class RotatedSlabBlock extends SlabBlock {
     @Nullable
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
+        Level level = context.getLevel();
         BlockPos blockPos = context.getClickedPos();
-        BlockState blockState = context.getLevel().getBlockState(blockPos);
-        if (blockState.is(this)) {
-            return blockState.setValue(TYPE, SlabType.DOUBLE).setValue(WATERLOGGED, false);
+        BlockState blockState = level.getBlockState(blockPos);
+        if (blockState.is(this) || !blockState.isAir()) {
+            return super.getStateForPlacement(context);
         } else {
-            FluidState fluidState = context.getLevel().getFluidState(blockPos);
-            BlockState blockState2 = this.defaultBlockState().setValue(WATERLOGGED, fluidState.getType() == Fluids.WATER);
-            if (context.isSecondaryUseActive()) {
-                Direction clickedFace = context.getClickedFace();
-                Direction.Axis axis = clickedFace.getAxis();
-                if (axis.isHorizontal()) {
-                    axis = Direction.Axis.Y;
-                } else {
-                    boolean good = false;
-                    for (Direction nearestLookingDirection : context.getNearestLookingDirections()) {
-                        if (nearestLookingDirection.getAxis().isHorizontal()) {
-                            axis = nearestLookingDirection.getAxis();
-                            axis = axis == Direction.Axis.X ? Direction.Axis.Z : Direction.Axis.X;
-                            good = true;
-                            break;
-                        }
-                    }
-                    if (!good) throw new RuntimeException();
-                }
-                blockState2 = blockState2.setValue(AXIS, axis);
-                if (context.getClickLocation().get(axis) - blockPos.get(axis) > 0.5) {
-                    return blockState2.setValue(TYPE, SlabType.TOP);
-                } else {
-                    return blockState2.setValue(TYPE, SlabType.BOTTOM);
-                }
+            FluidState fluidState = level.getFluidState(blockPos);
+            BlockState newBlockState = this.defaultBlockState().setValue(WATERLOGGED, fluidState.getType() == Fluids.WATER);
+            Direction clickedFace = context.getClickedFace();
+            Direction.Axis axis = clickedFace.getAxis();
+            if (context.getPlayer() != null && ModRegistry.HIT_VECTOR_CAPABILITY.get(context.getPlayer()).isPlacementPrecise()) {
+                Vec3 vec3 = context.getClickLocation().subtract(blockPos.getX(), blockPos.getY(), blockPos.getZ()).subtract(0.5, 0.5, 0.5);
+                Direction direction = Direction.getNearest(axis != Direction.Axis.X ? vec3.x : 0.0, axis != Direction.Axis.Y ? vec3.y : 0.0, axis != Direction.Axis.Z ? vec3.z : 0.0);
+                return newBlockState.setValue(AXIS, direction.getAxis()).setValue(TYPE, direction.getAxisDirection() == Direction.AxisDirection.POSITIVE ? SlabType.TOP : SlabType.BOTTOM);
             } else {
-                Direction clickedFace = context.getClickedFace().getOpposite();
-                BlockPos relative = blockPos.relative(clickedFace);
-                BlockState blockState1 = context.getLevel().getBlockState(relative);
-                if (blockState1.getBlock() instanceof RotatedSlabBlock && blockState1.getValue(TYPE) != SlabType.DOUBLE && clickedFace.getAxis() != blockState1.getValue(AXIS)) {
-                    return blockState2.setValue(AXIS, blockState1.getValue(AXIS)).setValue(TYPE, blockState1.getValue(TYPE));
+                clickedFace = clickedFace.getOpposite();
+                BlockState neighborBlockPos = level.getBlockState(blockPos.relative(clickedFace));
+                if (neighborBlockPos.getBlock() instanceof RotatedSlabBlock && neighborBlockPos.getValue(TYPE) != SlabType.DOUBLE && clickedFace.getAxis() != neighborBlockPos.getValue(AXIS)) {
+                    return newBlockState.setValue(AXIS, neighborBlockPos.getValue(AXIS)).setValue(TYPE, neighborBlockPos.getValue(TYPE));
                 } else {
-                    return blockState2.setValue(AXIS, clickedFace.getAxis()).setValue(TYPE, clickedFace.getAxisDirection() == Direction.AxisDirection.POSITIVE ? SlabType.TOP : SlabType.BOTTOM);
+                    return newBlockState.setValue(AXIS, clickedFace.getAxis()).setValue(TYPE, clickedFace.getAxisDirection() == Direction.AxisDirection.POSITIVE ? SlabType.TOP : SlabType.BOTTOM);
                 }
             }
         }
@@ -110,6 +103,12 @@ public class RotatedSlabBlock extends SlabBlock {
     }
 
     @Override
+    public RenderShape getRenderShape(BlockState state) {
+        // TODO remove again, model is currently broken
+        return RenderShape.INVISIBLE;
+    }
+
+    @Override
     public String getDescriptionId() {
         return this.block.getDescriptionId();
     }
@@ -128,18 +127,7 @@ public class RotatedSlabBlock extends SlabBlock {
         } else {
             Direction.Axis axis = state.getValue(AXIS);
             Direction.AxisDirection axisDirection = slabType == SlabType.TOP ? Direction.AxisDirection.POSITIVE : Direction.AxisDirection.NEGATIVE;
-            return SHAPES.get(DIRECTIONS.inverse().get(new SlabTypeKey(axis, axisDirection)));
-        }
-    }
-
-    private record SlabTypeKey(Direction.Axis axis, Direction.AxisDirection axisDirection) {
-
-        public SlabTypeKey(Direction direction) {
-            this(direction.getAxis(), direction.getAxisDirection());
-        }
-
-        public boolean is(Direction direction) {
-            return direction.getAxis() == this.axis && direction.getAxisDirection() == this.axisDirection;
+            return SHAPES.get(Direction.fromAxisAndDirection(axis, axisDirection));
         }
     }
 }

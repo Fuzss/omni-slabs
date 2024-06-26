@@ -2,6 +2,7 @@ package fuzs.verticalslabs.client;
 
 import fuzs.puzzleslib.api.client.core.v1.ClientAbstractions;
 import fuzs.puzzleslib.api.client.core.v1.ClientModConstructor;
+import fuzs.puzzleslib.api.client.event.v1.ClientPlayerEvents;
 import fuzs.puzzleslib.api.client.event.v1.ModelEvents;
 import fuzs.puzzleslib.api.client.event.v1.RenderHighlightCallback;
 import fuzs.puzzleslib.api.core.v1.context.PackRepositorySourcesContext;
@@ -16,8 +17,10 @@ import fuzs.verticalslabs.client.handler.SlabOutlineHandler;
 import fuzs.verticalslabs.data.client.DynamicModelProvider;
 import fuzs.verticalslabs.handler.DiagonalBlockHandler;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.Block;
 
+import java.awt.*;
 import java.util.Map;
 
 public class VerticalSlabsClient implements ClientModConstructor {
@@ -39,10 +42,11 @@ public class VerticalSlabsClient implements ClientModConstructor {
         });
         RenderHighlightCallback.EVENT.register(SlabOutlineHandler::onRenderHighlight);
         PlayerInteractEvents.ATTACK_BLOCK_V2.register(BlockDestroyingHandler::onAttackBlock);
+        ClientPlayerEvents.LOGGED_IN.register(BlockDestroyingHandler::onLoggedIn);
     }
 
     @Override
     public void onAddResourcePackFinders(PackRepositorySourcesContext context) {
-        context.addRepositorySource(PackResourcesHelper.buildClientPack(VerticalSlabs.id("default_block_models"), DynamicPackResources.create(DynamicModelProvider::new), true));
+        context.addRepositorySource(PackResourcesHelper.buildClientPack(VerticalSlabs.id("default_block_models"), DynamicPackResources.create(DynamicModelProvider::new), Component.literal("this"), Component.literal("pack"), false, false, false));
     }
 }

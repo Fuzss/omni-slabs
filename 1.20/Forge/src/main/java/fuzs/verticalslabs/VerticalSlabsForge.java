@@ -2,6 +2,8 @@ package fuzs.verticalslabs;
 
 import fuzs.puzzleslib.api.capability.v2.ForgeCapabilityHelper;
 import fuzs.puzzleslib.api.core.v1.ModConstructor;
+import fuzs.puzzleslib.api.data.v2.core.DataProviderHelper;
+import fuzs.verticalslabs.data.client.ModModelProvider;
 import fuzs.verticalslabs.init.ModRegistry;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.DataGenerator;
@@ -23,6 +25,7 @@ public class VerticalSlabsForge {
     public static void onConstructMod(final FMLConstructModEvent evt) {
         ModConstructor.construct(VerticalSlabs.MOD_ID, VerticalSlabs::new);
         registerCapabilities();
+        DataProviderHelper.registerDataProviders(VerticalSlabs.MOD_ID, ModModelProvider::new);
     }
 
     private static void registerCapabilities() {

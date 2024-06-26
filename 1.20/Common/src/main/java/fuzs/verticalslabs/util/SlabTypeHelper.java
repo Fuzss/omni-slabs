@@ -1,5 +1,6 @@
 package fuzs.verticalslabs.util;
 
+import fuzs.verticalslabs.init.ModRegistry;
 import fuzs.verticalslabs.world.level.block.RotatedSlabBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -17,7 +18,7 @@ public class SlabTypeHelper {
 
     @Nullable
     public static SlabType getSlabType(Player player, BlockState blockState, BlockPos blockPos, Vec3 hitVector) {
-        if (player.isSecondaryUseActive()) {
+        if (ModRegistry.HIT_VECTOR_CAPABILITY.get(player).isPlacementPrecise()) {
             if (blockState.getBlock() instanceof RotatedSlabBlock && blockState.getValue(RotatedSlabBlock.TYPE) == SlabType.DOUBLE) {
                 Direction.Axis axis = blockState.getValue(RotatedSlabBlock.AXIS);
                 if (hitVector.get(axis) - blockPos.get(axis) > 0.5) {
