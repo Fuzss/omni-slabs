@@ -2,14 +2,14 @@ package fuzs.verticalslabs.world.level.block;
 
 import fuzs.puzzleslib.api.shapes.v1.ShapesHelper;
 import fuzs.verticalslabs.init.ModRegistry;
+import fuzs.verticalslabs.util.SlabTypeHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.SlabBlock;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -131,5 +131,30 @@ public class RotatedSlabBlock extends SlabBlock {
                     slabType == SlabType.TOP ? Direction.AxisDirection.POSITIVE : Direction.AxisDirection.NEGATIVE;
             return SHAPES.get(Direction.fromAxisAndDirection(axis, axisDirection));
         }
+    }
+
+    @Override
+    public BlockState rotate(BlockState state, Rotation rotation) {
+        if (rotation == Rotation.CLOCKWISE_180 && state.getValue(AXIS).isHorizontal()) {
+            return state.setValue(TYPE, SlabTypeHelper.flipSlabType(state.getValue(TYPE)));
+        } else {
+            return RotatedPillarBlock.rotatePillar(state, rotation);
+        }
+    }
+
+    @Override
+    public BlockState mirror(BlockState state, Mirror mirror) {
+        switch (mirror) {
+            case LEFT_RIGHT:
+                if (state.getValue(AXIS) == Direction.Axis.Z) {
+                    return state.rotate(Rotation.CLOCKWISE_180);
+                }
+            case FRONT_BACK:
+                if (state.getValue(AXIS) == Direction.Axis.X) {
+                    return state.rotate(Rotation.CLOCKWISE_180);
+                }
+        }
+
+        return super.mirror(state, mirror);
     }
 }
