@@ -1,0 +1,44 @@
+package fuzs.verticalslabs;
+
+import fuzs.puzzleslib.api.capability.v2.ForgeCapabilityHelper;
+import fuzs.puzzleslib.api.core.v1.ModConstructor;
+import fuzs.puzzleslib.api.data.v2.core.DataProviderHelper;
+import fuzs.verticalslabs.data.client.ModModelProvider;
+import fuzs.verticalslabs.init.ModRegistry;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.data.DataGenerator;
+import net.minecraft.data.PackOutput;
+import net.minecraftforge.common.capabilities.CapabilityToken;
+import net.minecraftforge.common.data.ExistingFileHelper;
+import net.minecraftforge.data.event.GatherDataEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLConstructModEvent;
+
+import java.util.concurrent.CompletableFuture;
+
+@Mod(VerticalSlabs.MOD_ID)
+@Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
+public class VerticalSlabsForge {
+
+    @SubscribeEvent
+    public static void onConstructMod(final FMLConstructModEvent evt) {
+        ModConstructor.construct(VerticalSlabs.MOD_ID, VerticalSlabs::new);
+        registerCapabilities();
+        DataProviderHelper.registerDataProviders(VerticalSlabs.MOD_ID, ModModelProvider::new);
+    }
+
+    private static void registerCapabilities() {
+        ForgeCapabilityHelper.setCapabilityToken(ModRegistry.HIT_VECTOR_CAPABILITY, new CapabilityToken<>() {
+            // NO-OP
+        });
+    }
+
+    @SubscribeEvent
+    public static void onGatherData(final GatherDataEvent evt) {
+        final DataGenerator dataGenerator = evt.getGenerator();
+        final PackOutput packOutput = dataGenerator.getPackOutput();
+        final CompletableFuture<HolderLookup.Provider> lookupProvider = evt.getLookupProvider();
+        final ExistingFileHelper fileHelper = evt.getExistingFileHelper();
+    }
+}

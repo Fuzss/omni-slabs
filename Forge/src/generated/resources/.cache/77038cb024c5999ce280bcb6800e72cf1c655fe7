@@ -1,0 +1,5 @@
+// 1.20.1	2025-09-18T15:05:45.735128	Model Definitions
+21e43b347557ff12c71a08b729b07428ee8de364 assets/minecraft/models/block/smooth_stone_slab.json
+f53e47de0365cab67a82463f26cc8d8ac7cb2c2c assets/minecraft/models/block/smooth_stone_slab_double.json
+2ee53d600f7cdbe7d1b27eb107cadbf375a7f09a assets/minecraft/models/block/smooth_stone_slab_top.json
+fe38e526762853a0bdb57374b0e190c5210ac616 assets/verticalslabs/blockstates/minecraft/smooth_stone_slab.json

@@ -1,0 +1,46 @@
+{
+  "variants": {
+    "axis=x,type=bottom": {
+      "model": "minecraft:block/smooth_stone_slab",
+      "uvlock": true,
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,type=double": {
+      "model": "minecraft:block/smooth_stone_slab_double",
+      "uvlock": true,
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,type=top": {
+      "model": "minecraft:block/smooth_stone_slab_top",
+      "uvlock": true,
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,type=bottom": {
+      "model": "minecraft:block/smooth_stone_slab"
+    },
+    "axis=y,type=double": {
+      "model": "minecraft:block/smooth_stone_slab_double"
+    },
+    "axis=y,type=top": {
+      "model": "minecraft:block/smooth_stone_slab_top"
+    },
+    "axis=z,type=bottom": {
+      "model": "minecraft:block/smooth_stone_slab",
+      "uvlock": true,
+      "x": 270
+    },
+    "axis=z,type=double": {
+      "model": "minecraft:block/smooth_stone_slab_double",
+      "uvlock": true,
+      "x": 270
+    },
+    "axis=z,type=top": {
+      "model": "minecraft:block/smooth_stone_slab_top",
+      "uvlock": true,
+      "x": 270
+    }
+  }
+}

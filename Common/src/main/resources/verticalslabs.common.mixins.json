@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_17",
+  "package": "fuzs.verticalslabs.mixin",
+  "refmap": "verticalslabs.refmap.json",
+  "plugin": "fuzs.verticalslabs.mixin.ModMixinConfigPlugin",
+  "mixins": [
+  ],
+  "client": [
+    "client.MultiPlayerGameModeMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
