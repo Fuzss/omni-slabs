@@ -1,5 +1,6 @@
 package fuzs.omnislabs.network.client;
 
+import fuzs.omnislabs.attachment.SyncedSlabSettings;
 import fuzs.omnislabs.init.ModRegistry;
 import fuzs.puzzleslib.api.network.v4.message.MessageListener;
 import fuzs.puzzleslib.api.network.v4.message.play.ServerboundPlayMessage;
@@ -17,8 +18,10 @@ public record ServerboundHitVectorMessage(Vec3 hitVector) implements Serverbound
         return new MessageListener<Context>() {
             @Override
             public void accept(Context context) {
-                ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.get(context.player())
-                        .setHitVector(ServerboundHitVectorMessage.this.hitVector);
+                SyncedSlabSettings syncedSlabSettings = ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.getOrDefault(
+                        context.player(),
+                        SyncedSlabSettings.EMPTY).setHitVector(ServerboundHitVectorMessage.this.hitVector);
+                ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.set(context.player(), syncedSlabSettings);
             }
         };
     }

@@ -1,5 +1,6 @@
 package fuzs.omnislabs.util;
 
+import fuzs.omnislabs.attachment.SyncedSlabSettings;
 import fuzs.omnislabs.init.ModRegistry;
 import fuzs.omnislabs.world.level.block.RotatedSlabBlock;
 import net.minecraft.core.BlockPos;
@@ -8,7 +9,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public class SlabTypeHelper {
 
@@ -26,7 +27,9 @@ public class SlabTypeHelper {
 
     @Nullable
     public static SlabType getSlabType(Player player, BlockState blockState, BlockPos blockPos, Vec3 hitVector) {
-        if (ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.get(player).preciseDestruction().supportsAction(player)) {
+        if (ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.getOrDefault(player, SyncedSlabSettings.EMPTY)
+                .preciseDestruction()
+                .supportsAction(player)) {
             if (blockState.getBlock() instanceof RotatedSlabBlock
                     && blockState.getValue(RotatedSlabBlock.TYPE) == SlabType.DOUBLE) {
                 Direction.Axis axis = blockState.getValue(RotatedSlabBlock.AXIS);
@@ -37,6 +40,7 @@ public class SlabTypeHelper {
                 }
             }
         }
+
         return null;
     }
 }

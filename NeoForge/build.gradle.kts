@@ -6,3 +6,11 @@ dependencies {
     modCompileOnly(libs.puzzleslib.common)
     modApi(libs.puzzleslib.neoforge)
 }
+
+multiloader {
+    mixins {
+        clientMixin(
+            "ClientLevelNeoForgeMixin"
+        )
+    }
+}

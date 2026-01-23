@@ -5,3 +5,12 @@ plugins {
 dependencies {
     modCompileOnlyApi(libs.puzzleslib.common)
 }
+
+multiloader {
+    mixins {
+        clientMixin(
+            "ClientLevelMixin",
+            "MultiPlayerGameModeMixin"
+        )
+    }
+}

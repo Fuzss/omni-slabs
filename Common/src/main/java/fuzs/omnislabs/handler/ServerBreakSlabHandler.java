@@ -7,6 +7,7 @@ import fuzs.omnislabs.world.level.block.RotatedSlabBlock;
 import fuzs.puzzleslib.api.event.v1.core.EventResult;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
@@ -16,15 +17,16 @@ import net.minecraft.world.level.block.state.properties.SlabType;
 
 public class ServerBreakSlabHandler {
 
-    public static EventResult onBreakBlock(ServerLevel level, BlockPos pos, BlockState blockState, Player player, ItemStack itemInHand) {
-        SyncedSlabSettings capability = ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.get(player);
-        SlabType slabType = SlabTypeHelper.getSlabType(player, blockState, pos, capability.hitVector());
+    public static EventResult onBreakBlock(ServerLevel serverLevel, BlockPos blockPos, BlockState blockState, ServerPlayer serverPlayer, ItemStack itemInHand) {
+        SyncedSlabSettings capability = ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.getOrDefault(serverPlayer,
+                SyncedSlabSettings.EMPTY);
+        SlabType slabType = SlabTypeHelper.getSlabType(serverPlayer, blockState, blockPos, capability.hitVector());
         if (slabType != null) {
             BlockState brokenBlockState = blockState.setValue(RotatedSlabBlock.TYPE, slabType);
-            destroyBlock(level, pos, brokenBlockState, player);
+            destroyBlock(serverLevel, blockPos, brokenBlockState, serverPlayer);
             BlockState newBlockState = blockState.setValue(RotatedSlabBlock.TYPE,
                     SlabTypeHelper.flipSlabType(slabType));
-            level.setBlockAndUpdate(pos, newBlockState);
+            serverLevel.setBlockAndUpdate(blockPos, newBlockState);
             return EventResult.INTERRUPT;
         } else {
             return EventResult.PASS;

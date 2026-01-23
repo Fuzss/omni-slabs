@@ -6,3 +6,11 @@ dependencies {
     modApi(libs.fabricapi.fabric)
     modApi(libs.puzzleslib.fabric)
 }
+
+multiloader {
+    mixins {
+        clientMixin(
+            "ClientLevelFabricMixin"
+        )
+    }
+}
