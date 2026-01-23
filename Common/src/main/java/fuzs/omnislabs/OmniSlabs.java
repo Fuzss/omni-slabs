@@ -1,6 +1,7 @@
 package fuzs.omnislabs;
 
 import fuzs.omnislabs.config.ClientConfig;
+import fuzs.omnislabs.config.ServerConfig;
 import fuzs.omnislabs.handler.BlockConversionHandler;
 import fuzs.omnislabs.init.ModRegistry;
 import fuzs.omnislabs.network.client.ServerboundHitVectorMessage;
@@ -26,7 +27,9 @@ public class OmniSlabs implements ModConstructor {
     public static final String MOD_NAME = "Omni Slabs";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_NAME);
 
-    public static final ConfigHolder CONFIG = ConfigHolder.builder(MOD_ID).client(ClientConfig.class);
+    public static final ConfigHolder CONFIG = ConfigHolder.builder(MOD_ID)
+            .client(ClientConfig.class)
+            .server(ServerConfig.class);
     public static final Predicate<Block> BLOCK_PREDICATE = (Block block) -> {
         return block instanceof SlabBlock && !(block instanceof RotatedSlabBlock);
     };

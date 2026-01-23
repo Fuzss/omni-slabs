@@ -49,8 +49,9 @@ public class OmniSlabsClient implements ClientModConstructor {
                     (BlockStateModelLoader.LoadedModels loadedModels, BiConsumer<BlockState, BlockStateModel.UnbakedRoot> blockStateConsumer) -> {
                         for (BlockState blockState : newBlock.getStateDefinition().getPossibleStates()) {
                             Direction.Axis axis = blockState.getValue(RotatedSlabBlock.AXIS);
+                            boolean keepVanillaModel = axis == Direction.Axis.Y;
                             BlockState oldBlockState;
-                            if (axis == Direction.Axis.Y) {
+                            if (keepVanillaModel) {
                                 oldBlockState = oldBlock.withPropertiesOf(blockState);
                             } else {
                                 oldBlockState = oldBlock.withPropertiesOf(blockState)
@@ -59,7 +60,7 @@ public class OmniSlabsClient implements ClientModConstructor {
 
                             BlockStateModel.UnbakedRoot model = loadedModels.models().get(oldBlockState);
                             if (model != null) {
-                                if (axis == Direction.Axis.Y) {
+                                if (keepVanillaModel) {
                                     blockStateConsumer.accept(blockState, model);
                                 } else {
                                     SlabType slabType = blockState.getValue(RotatedSlabBlock.TYPE);

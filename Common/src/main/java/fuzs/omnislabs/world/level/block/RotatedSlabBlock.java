@@ -1,6 +1,8 @@
 package fuzs.omnislabs.world.level.block;
 
+import fuzs.omnislabs.OmniSlabs;
 import fuzs.omnislabs.attachment.SyncedSlabSettings;
+import fuzs.omnislabs.config.ServerConfig;
 import fuzs.omnislabs.handler.BlockConversionHandler;
 import fuzs.omnislabs.init.ModRegistry;
 import fuzs.omnislabs.util.SlabTypeHelper;
@@ -8,6 +10,7 @@ import fuzs.puzzleslib.api.util.v1.ShapesHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -53,9 +56,8 @@ public class RotatedSlabBlock extends SlabBlock {
         }
     }
 
-    @Nullable
     @Override
-    public BlockState getStateForPlacement(BlockPlaceContext context) {
+    public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
         Level level = context.getLevel();
         BlockPos blockPos = context.getClickedPos();
         BlockState blockState = level.getBlockState(blockPos);
@@ -65,33 +67,33 @@ public class RotatedSlabBlock extends SlabBlock {
             FluidState fluidState = level.getFluidState(blockPos);
             BlockState newBlockState = this.defaultBlockState()
                     .setValue(WATERLOGGED, fluidState.getType() == Fluids.WATER);
-            Direction clickedFace = context.getClickedFace();
-            Direction.Axis axis = clickedFace.getAxis();
-            if (context.getPlayer() != null && ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.get(context.getPlayer())
-                    .precisePlacement()
-                    .supportsAction(context.getPlayer())) {
+            Direction direction = context.getClickedFace();
+            Direction.Axis axis = direction.getAxis();
+            if (context.getPlayer() != null
+                    && ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.getOrDefault(context.getPlayer(),
+                    SyncedSlabSettings.EMPTY).precisePlacement().supportsAction(context.getPlayer())) {
                 Vec3 vec3 = context.getClickLocation()
                         .subtract(blockPos.getX(), blockPos.getY(), blockPos.getZ())
                         .subtract(0.5, 0.5, 0.5);
-                Direction direction = Direction.getApproximateNearest(axis != Direction.Axis.X ? vec3.x : 0.0,
+                Direction placementDirection = Direction.getApproximateNearest(axis != Direction.Axis.X ? vec3.x : 0.0,
                         axis != Direction.Axis.Y ? vec3.y : 0.0,
                         axis != Direction.Axis.Z ? vec3.z : 0.0);
-                return newBlockState.setValue(AXIS, direction.getAxis())
+                return newBlockState.setValue(AXIS, placementDirection.getAxis())
                         .setValue(TYPE,
-                                direction.getAxisDirection() == Direction.AxisDirection.POSITIVE ? SlabType.TOP :
-                                        SlabType.BOTTOM);
+                                placementDirection.getAxisDirection() == Direction.AxisDirection.POSITIVE ?
+                                        SlabType.TOP : SlabType.BOTTOM);
             } else {
-                clickedFace = clickedFace.getOpposite();
-                BlockState neighborBlockPos = level.getBlockState(blockPos.relative(clickedFace));
-                if (neighborBlockPos.getBlock() instanceof RotatedSlabBlock
+                BlockState neighborBlockPos = level.getBlockState(blockPos.relative(direction.getOpposite()));
+                if (OmniSlabs.CONFIG.get(ServerConfig.class).copyNeighborSlabOrientation
+                        && neighborBlockPos.getBlock() instanceof RotatedSlabBlock
                         && neighborBlockPos.getValue(TYPE) != SlabType.DOUBLE
-                        && clickedFace.getAxis() != neighborBlockPos.getValue(AXIS)) {
+                        && axis != neighborBlockPos.getValue(AXIS)) {
                     return newBlockState.setValue(AXIS, neighborBlockPos.getValue(AXIS))
                             .setValue(TYPE, neighborBlockPos.getValue(TYPE));
                 } else {
-                    return newBlockState.setValue(AXIS, clickedFace.getAxis())
+                    return newBlockState.setValue(AXIS, axis)
                             .setValue(TYPE,
-                                    clickedFace.getAxisDirection() == Direction.AxisDirection.POSITIVE ? SlabType.TOP :
+                                    direction.getAxisDirection() != Direction.AxisDirection.POSITIVE ? SlabType.TOP :
                                             SlabType.BOTTOM);
                 }
             }
@@ -134,29 +136,35 @@ public class RotatedSlabBlock extends SlabBlock {
      */
     @Override
     public void playerDestroy(Level level, Player player, BlockPos blockPos, BlockState blockState, @Nullable BlockEntity blockEntity, ItemStack itemStack) {
-        // The loot table has a
         BlockState originalBlockState = BlockConversionHandler.getBlockConversions()
                 .inverse()
                 .getOrDefault(blockState.getBlock(), blockState.getBlock())
                 .withPropertiesOf(blockState);
         if (level instanceof ServerLevel serverLevel) {
-            SyncedSlabSettings syncedSlabSettings = ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.getOrDefault(player,
-                    SyncedSlabSettings.EMPTY);
-            SlabType slabType = SlabTypeHelper.getSlabType(player,
-                    blockState,
-                    blockPos,
-                    syncedSlabSettings.hitVector());
+            SlabType slabType = this.destroyOnlyOneSlab(serverLevel, (ServerPlayer) player, blockPos, blockState);
             if (slabType != null) {
-                BlockState brokenBlockState = originalBlockState.setValue(RotatedSlabBlock.TYPE, slabType);
-                super.playerDestroy(level, player, blockPos, brokenBlockState, blockEntity, itemStack);
-                BlockState remainingBlockState = blockState.setValue(RotatedSlabBlock.TYPE,
-                        SlabTypeHelper.flipSlabType(slabType));
-                serverLevel.setBlock(blockPos, remainingBlockState, Block.UPDATE_CLIENTS);
-                return;
+                originalBlockState = originalBlockState.setValue(SlabBlock.TYPE, slabType);
             }
         }
 
         super.playerDestroy(level, player, blockPos, originalBlockState, blockEntity, itemStack);
+    }
+
+    /**
+     * @see TurtleEggBlock#decreaseEggs(Level, BlockPos, BlockState)
+     */
+    public @Nullable SlabType destroyOnlyOneSlab(ServerLevel serverLevel, ServerPlayer serverPlayer, BlockPos blockPos, BlockState blockState) {
+        SyncedSlabSettings syncedSlabSettings = ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.getOrDefault(
+                serverPlayer,
+                SyncedSlabSettings.EMPTY);
+        SlabType slabType = syncedSlabSettings.getSlabType(serverPlayer, blockState, blockPos);
+        if (slabType != null) {
+            BlockState remainingBlockState = blockState.setValue(RotatedSlabBlock.TYPE,
+                    SlabTypeHelper.flipSlabType(slabType));
+            serverLevel.setBlock(blockPos, remainingBlockState, Block.UPDATE_CLIENTS);
+        }
+
+        return slabType;
     }
 
     @Override

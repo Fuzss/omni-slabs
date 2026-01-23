@@ -4,10 +4,16 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import fuzs.omnislabs.config.SlabActionType;
 import fuzs.omnislabs.init.ModRegistry;
+import fuzs.omnislabs.world.level.block.RotatedSlabBlock;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 
 public record SyncedSlabSettings(Vec3 hitVector, SlabActionType precisePlacement, SlabActionType preciseDestruction) {
     public static final SyncedSlabSettings EMPTY = new SyncedSlabSettings(Vec3.ZERO,
@@ -46,5 +52,25 @@ public record SyncedSlabSettings(Vec3 hitVector, SlabActionType precisePlacement
         SyncedSlabSettings syncedSlabSettings = ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.getOrDefault(player,
                 SyncedSlabSettings.EMPTY).setActionSettings(precisePlacement, preciseDestruction);
         ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.set(player, syncedSlabSettings);
+    }
+
+    public @Nullable SlabType getSlabType(Player player, BlockState blockState, BlockPos blockPos) {
+        return this.getSlabType(player, blockState, blockPos, this.hitVector());
+    }
+
+    public @Nullable SlabType getSlabType(Player player, BlockState blockState, BlockPos blockPos, Vec3 hitVector) {
+        if (this.preciseDestruction().supportsAction(player)) {
+            if (blockState.getBlock() instanceof RotatedSlabBlock
+                    && blockState.getValue(RotatedSlabBlock.TYPE) == SlabType.DOUBLE) {
+                Direction.Axis axis = blockState.getValue(RotatedSlabBlock.AXIS);
+                if (hitVector.get(axis) - blockPos.get(axis) > 0.5) {
+                    return SlabType.TOP;
+                } else {
+                    return SlabType.BOTTOM;
+                }
+            }
+        }
+
+        return null;
     }
 }

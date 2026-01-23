@@ -1,6 +1,7 @@
 package fuzs.omnislabs.client.handler;
 
-import fuzs.omnislabs.util.SlabTypeHelper;
+import fuzs.omnislabs.attachment.SyncedSlabSettings;
+import fuzs.omnislabs.init.ModRegistry;
 import fuzs.omnislabs.world.level.block.RotatedSlabBlock;
 import fuzs.puzzleslib.api.event.v1.core.EventResultHolder;
 import net.minecraft.client.Minecraft;
@@ -17,7 +18,9 @@ public class SlabOutlineHandler {
 
     public static EventResultHolder<VoxelShape> onExtractBlockOutline(ClientLevel clientLevel, BlockPos blockPos, BlockState blockState, BlockHitResult hitResult, CollisionContext collisionContext) {
         Player player = Minecraft.getInstance().player;
-        SlabType slabType = SlabTypeHelper.getSlabType(player, blockState, blockPos, hitResult.getLocation());
+        SyncedSlabSettings syncedSlabSettings = ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.getOrDefault(player,
+                SyncedSlabSettings.EMPTY);
+        SlabType slabType = syncedSlabSettings.getSlabType(player, blockState, blockPos, hitResult.getLocation());
         if (slabType != null) {
             VoxelShape voxelShape = blockState.setValue(RotatedSlabBlock.TYPE, slabType)
                     .getShape(clientLevel, blockPos, collisionContext);

@@ -7,7 +7,6 @@ import fuzs.omnislabs.config.SlabActionType;
 import fuzs.omnislabs.init.ModRegistry;
 import fuzs.omnislabs.network.client.ServerboundHitVectorMessage;
 import fuzs.omnislabs.network.client.ServerboundSlabPlacementMessage;
-import fuzs.omnislabs.util.SlabTypeHelper;
 import fuzs.omnislabs.world.level.block.RotatedSlabBlock;
 import fuzs.puzzleslib.api.event.v1.core.EventResult;
 import fuzs.puzzleslib.api.network.v4.MessageSender;
@@ -46,17 +45,17 @@ public class BlockDestroyingHandler {
         return EventResult.PASS;
     }
 
-    @Nullable
-    public static SlabType getSlabType(Player player, BlockState blockState) {
-        return destroyBlockPos != null ? SlabTypeHelper.getSlabType(player,
-                blockState,
-                destroyBlockPos,
-                ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.getOrDefault(player, SyncedSlabSettings.EMPTY)
-                        .hitVector()) : null;
+    public static @Nullable SlabType getSlabType(Player player, BlockState blockState) {
+        if (destroyBlockPos != null) {
+            SyncedSlabSettings syncedSlabSettings = ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.getOrDefault(player,
+                    SyncedSlabSettings.EMPTY);
+            return syncedSlabSettings.getSlabType(player, blockState, destroyBlockPos);
+        } else {
+            return null;
+        }
     }
 
-    @Nullable
-    public static SlabType getSlabTypeAt(BlockState blockState, BlockPos blockPos) {
+    public static @Nullable SlabType getSlabTypeAt(BlockState blockState, BlockPos blockPos) {
         if (Objects.equals(blockPos, destroyBlockPos)) {
             Minecraft minecraft = Minecraft.getInstance();
             return getSlabType(minecraft.player, blockState);
@@ -79,7 +78,9 @@ public class BlockDestroyingHandler {
     public static boolean isSameDestroyTarget(BlockPos blockPos, Player player, ClientLevel clientLevel, HitResult hitResult) {
         BlockState blockState = clientLevel.getBlockState(blockPos);
         SlabType destroySlabType = BlockDestroyingHandler.getSlabType(player, blockState);
-        SlabType slabType = SlabTypeHelper.getSlabType(player, blockState, blockPos, hitResult.getLocation());
+        SyncedSlabSettings syncedSlabSettings = ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.getOrDefault(player,
+                SyncedSlabSettings.EMPTY);
+        SlabType slabType = syncedSlabSettings.getSlabType(player, blockState, blockPos, hitResult.getLocation());
         return slabType == destroySlabType;
     }
 
