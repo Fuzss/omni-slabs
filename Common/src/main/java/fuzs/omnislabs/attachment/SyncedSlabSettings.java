@@ -3,8 +3,10 @@ package fuzs.omnislabs.attachment;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import fuzs.omnislabs.config.SlabActionType;
+import fuzs.omnislabs.init.ModRegistry;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 public record SyncedSlabSettings(Vec3 hitVector, SlabActionType precisePlacement, SlabActionType preciseDestruction) {
@@ -30,7 +32,19 @@ public record SyncedSlabSettings(Vec3 hitVector, SlabActionType precisePlacement
         return new SyncedSlabSettings(hitVector, this.precisePlacement, this.preciseDestruction);
     }
 
+    public static void setHitVector(Player player, Vec3 hitVector) {
+        SyncedSlabSettings syncedSlabSettings = ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.getOrDefault(player,
+                SyncedSlabSettings.EMPTY).setHitVector(hitVector);
+        ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.set(player, syncedSlabSettings);
+    }
+
     public SyncedSlabSettings setActionSettings(SlabActionType precisePlacement, SlabActionType preciseDestruction) {
         return new SyncedSlabSettings(this.hitVector, precisePlacement, preciseDestruction);
+    }
+
+    public static void setActionSettings(Player player, SlabActionType precisePlacement, SlabActionType preciseDestruction) {
+        SyncedSlabSettings syncedSlabSettings = ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.getOrDefault(player,
+                SyncedSlabSettings.EMPTY).setActionSettings(precisePlacement, preciseDestruction);
+        ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.set(player, syncedSlabSettings);
     }
 }

@@ -21,7 +21,7 @@ public class SlabTypeHelper {
                 return SlabType.TOP;
             }
         } else {
-            return SlabType.DOUBLE;
+            return slabType;
         }
     }
 

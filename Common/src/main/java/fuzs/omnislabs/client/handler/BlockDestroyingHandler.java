@@ -12,6 +12,7 @@ import fuzs.omnislabs.world.level.block.RotatedSlabBlock;
 import fuzs.puzzleslib.api.event.v1.core.EventResult;
 import fuzs.puzzleslib.api.network.v4.MessageSender;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
@@ -23,18 +24,25 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.SlabType;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
+
+import java.util.Objects;
 
 public class BlockDestroyingHandler {
-    private static BlockPos destroyBlockPos = new BlockPos(-1, -1, -1);
+    @Nullable
+    private static BlockPos destroyBlockPos;
 
     public static EventResult onAttackBlock(Player player, Level level, InteractionHand interactionHand, BlockPos blockPos, Direction direction) {
-        Minecraft minecraft = Minecraft.getInstance();
-        SyncedSlabSettings capability = ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.getOrDefault(player,
-                SyncedSlabSettings.EMPTY);
-        capability.setHitVector(minecraft.hitResult.getLocation());
-        MessageSender.broadcast(new ServerboundHitVectorMessage(capability.hitVector()));
-        destroyBlockPos = blockPos;
+        if (level.isClientSide()) {
+            Minecraft minecraft = Minecraft.getInstance();
+            Vec3 hitVector = minecraft.hitResult.getLocation();
+            SyncedSlabSettings.setHitVector(player, hitVector);
+            MessageSender.broadcast(new ServerboundHitVectorMessage(hitVector));
+            destroyBlockPos = blockPos;
+        }
+
         return EventResult.PASS;
     }
 
@@ -49,7 +57,7 @@ public class BlockDestroyingHandler {
 
     @Nullable
     public static SlabType getSlabTypeAt(BlockState blockState, BlockPos blockPos) {
-        if (blockPos.equals(destroyBlockPos)) {
+        if (Objects.equals(blockPos, destroyBlockPos)) {
             Minecraft minecraft = Minecraft.getInstance();
             return getSlabType(minecraft.player, blockState);
         } else {
@@ -68,6 +76,13 @@ public class BlockDestroyingHandler {
         return blockState;
     }
 
+    public static boolean isSameDestroyTarget(BlockPos blockPos, Player player, ClientLevel clientLevel, HitResult hitResult) {
+        BlockState blockState = clientLevel.getBlockState(blockPos);
+        SlabType destroySlabType = BlockDestroyingHandler.getSlabType(player, blockState);
+        SlabType slabType = SlabTypeHelper.getSlabType(player, blockState, blockPos, hitResult.getLocation());
+        return slabType == destroySlabType;
+    }
+
     public static void onPlayerJoin(LocalPlayer player, MultiPlayerGameMode multiPlayerGameMode, Connection connection) {
         syncPreciseSlabPlacement(player);
     }
@@ -75,8 +90,7 @@ public class BlockDestroyingHandler {
     public static void syncPreciseSlabPlacement(Player player) {
         SlabActionType precisePlacement = OmniSlabs.CONFIG.get(ClientConfig.class).precisePlacement;
         SlabActionType preciseDestruction = OmniSlabs.CONFIG.get(ClientConfig.class).preciseDestruction;
-        ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.getOrDefault(player, SyncedSlabSettings.EMPTY)
-                .setActionSettings(precisePlacement, preciseDestruction);
+        SyncedSlabSettings.setActionSettings(player, precisePlacement, preciseDestruction);
         MessageSender.broadcast(new ServerboundSlabPlacementMessage(precisePlacement, preciseDestruction));
     }
 }

@@ -2,7 +2,6 @@ package fuzs.omnislabs.network.client;
 
 import fuzs.omnislabs.attachment.SyncedSlabSettings;
 import fuzs.omnislabs.config.SlabActionType;
-import fuzs.omnislabs.init.ModRegistry;
 import fuzs.puzzleslib.api.network.v4.message.MessageListener;
 import fuzs.puzzleslib.api.network.v4.message.play.ServerboundPlayMessage;
 import io.netty.buffer.ByteBuf;
@@ -22,12 +21,9 @@ public record ServerboundSlabPlacementMessage(SlabActionType precisePlacement,
         return new MessageListener<Context>() {
             @Override
             public void accept(Context context) {
-                SyncedSlabSettings syncedSlabSettings = ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.getOrDefault(
-                                context.player(),
-                                SyncedSlabSettings.EMPTY)
-                        .setActionSettings(ServerboundSlabPlacementMessage.this.precisePlacement,
-                                ServerboundSlabPlacementMessage.this.preciseDestruction);
-                ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.set(context.player(), syncedSlabSettings);
+                SyncedSlabSettings.setActionSettings(context.player(),
+                        ServerboundSlabPlacementMessage.this.precisePlacement,
+                        ServerboundSlabPlacementMessage.this.preciseDestruction);
             }
         };
     }

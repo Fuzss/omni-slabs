@@ -2,7 +2,6 @@ package fuzs.omnislabs;
 
 import fuzs.omnislabs.config.ClientConfig;
 import fuzs.omnislabs.handler.BlockConversionHandler;
-import fuzs.omnislabs.handler.ServerBreakSlabHandler;
 import fuzs.omnislabs.init.ModRegistry;
 import fuzs.omnislabs.network.client.ServerboundHitVectorMessage;
 import fuzs.omnislabs.network.client.ServerboundSlabPlacementMessage;
@@ -12,7 +11,6 @@ import fuzs.puzzleslib.api.core.v1.ModConstructor;
 import fuzs.puzzleslib.api.core.v1.context.PayloadTypesContext;
 import fuzs.puzzleslib.api.event.v1.RegistryEntryAddedCallback;
 import fuzs.puzzleslib.api.event.v1.core.EventPhase;
-import fuzs.puzzleslib.api.event.v1.level.BlockEvents;
 import fuzs.puzzleslib.api.event.v1.server.TagsUpdatedCallback;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
@@ -44,7 +42,6 @@ public class OmniSlabs implements ModConstructor {
                 .register(BlockConversionHandler.onRegistryEntryAdded(BLOCK_PREDICATE, RotatedSlabBlock::new, MOD_ID));
         TagsUpdatedCallback.EVENT.register(EventPhase.FIRST,
                 BlockConversionHandler.onTagsUpdated(ModRegistry.UNALTERED_SLABS_BLOCK_TAG, BLOCK_PREDICATE));
-        BlockEvents.BREAK.register(ServerBreakSlabHandler::onBreakBlock);
     }
 
     @Override

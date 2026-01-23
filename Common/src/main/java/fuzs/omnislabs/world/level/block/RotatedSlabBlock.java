@@ -1,15 +1,20 @@
 package fuzs.omnislabs.world.level.block;
 
+import fuzs.omnislabs.attachment.SyncedSlabSettings;
+import fuzs.omnislabs.handler.BlockConversionHandler;
 import fuzs.omnislabs.init.ModRegistry;
 import fuzs.omnislabs.util.SlabTypeHelper;
 import fuzs.puzzleslib.api.util.v1.ShapesHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -28,11 +33,24 @@ import java.util.Map;
 
 public class RotatedSlabBlock extends SlabBlock {
     public static final EnumProperty<Direction.Axis> AXIS = BlockStateProperties.AXIS;
-    protected static final Map<Direction, VoxelShape> SHAPES = ShapesHelper.rotate(SlabBlock.SHAPE_TOP);
+    private static final Map<Direction, VoxelShape> SHAPES = ShapesHelper.rotate(SlabBlock.SHAPE_TOP);
 
     public RotatedSlabBlock(BlockBehaviour.Properties properties) {
         super(properties);
         this.registerDefaultState(this.defaultBlockState().setValue(AXIS, Direction.Axis.Y));
+    }
+
+    @Override
+    public VoxelShape getShape(BlockState blockState, BlockGetter level, BlockPos blockPos, CollisionContext context) {
+        SlabType slabType = blockState.getValue(TYPE);
+        if (slabType == SlabType.DOUBLE) {
+            return Shapes.block();
+        } else {
+            Direction.Axis axis = blockState.getValue(AXIS);
+            Direction.AxisDirection axisDirection =
+                    slabType == SlabType.TOP ? Direction.AxisDirection.POSITIVE : Direction.AxisDirection.NEGATIVE;
+            return SHAPES.get(Direction.fromAxisAndDirection(axis, axisDirection));
+        }
     }
 
     @Nullable
@@ -81,14 +99,14 @@ public class RotatedSlabBlock extends SlabBlock {
     }
 
     @Override
-    public boolean canBeReplaced(BlockState state, BlockPlaceContext useContext) {
-        ItemStack itemStack = useContext.getItemInHand();
-        SlabType slabType = state.getValue(TYPE);
-        if (slabType != SlabType.DOUBLE && itemStack.is(this.asItem())) {
-            if (useContext.replacingClickedOnBlock()) {
-                Direction.Axis axis = state.getValue(AXIS);
-                boolean bl = useContext.getClickLocation().get(axis) - useContext.getClickedPos().get(axis) > 0.5;
-                Direction direction = useContext.getClickedFace();
+    public boolean canBeReplaced(BlockState blockState, BlockPlaceContext context) {
+        ItemStack itemInHand = context.getItemInHand();
+        SlabType slabType = blockState.getValue(TYPE);
+        if (slabType != SlabType.DOUBLE && itemInHand.is(this.asItem())) {
+            if (context.replacingClickedOnBlock()) {
+                Direction.Axis axis = blockState.getValue(AXIS);
+                boolean bl = context.getClickLocation().get(axis) - context.getClickedPos().get(axis) > 0.5;
+                Direction direction = context.getClickedFace();
                 if (slabType == SlabType.BOTTOM) {
                     return direction.getAxis() == axis
                             && direction.getAxisDirection() == Direction.AxisDirection.POSITIVE
@@ -106,6 +124,41 @@ public class RotatedSlabBlock extends SlabBlock {
         }
     }
 
+    /**
+     * The slab loot table usually uses
+     * {@link net.minecraft.world.level.storage.loot.predicates.LootItemBlockStatePropertyCondition} to check for the
+     * specific slab block when deciding on the number of slabs to drop. So, we pass the original block state to the
+     * super call which handles the drops.
+     *
+     * @see TurtleEggBlock#playerDestroy(Level, Player, BlockPos, BlockState, BlockEntity, ItemStack)
+     */
+    @Override
+    public void playerDestroy(Level level, Player player, BlockPos blockPos, BlockState blockState, @Nullable BlockEntity blockEntity, ItemStack itemStack) {
+        // The loot table has a
+        BlockState originalBlockState = BlockConversionHandler.getBlockConversions()
+                .inverse()
+                .getOrDefault(blockState.getBlock(), blockState.getBlock())
+                .withPropertiesOf(blockState);
+        if (level instanceof ServerLevel serverLevel) {
+            SyncedSlabSettings syncedSlabSettings = ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.getOrDefault(player,
+                    SyncedSlabSettings.EMPTY);
+            SlabType slabType = SlabTypeHelper.getSlabType(player,
+                    blockState,
+                    blockPos,
+                    syncedSlabSettings.hitVector());
+            if (slabType != null) {
+                BlockState brokenBlockState = originalBlockState.setValue(RotatedSlabBlock.TYPE, slabType);
+                super.playerDestroy(level, player, blockPos, brokenBlockState, blockEntity, itemStack);
+                BlockState remainingBlockState = blockState.setValue(RotatedSlabBlock.TYPE,
+                        SlabTypeHelper.flipSlabType(slabType));
+                serverLevel.setBlock(blockPos, remainingBlockState, Block.UPDATE_CLIENTS);
+                return;
+            }
+        }
+
+        super.playerDestroy(level, player, blockPos, originalBlockState, blockEntity, itemStack);
+    }
+
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder);
@@ -113,40 +166,27 @@ public class RotatedSlabBlock extends SlabBlock {
     }
 
     @Override
-    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        SlabType slabType = state.getValue(TYPE);
-        if (slabType == SlabType.DOUBLE) {
-            return Shapes.block();
+    public BlockState rotate(BlockState blockState, Rotation rotation) {
+        if (rotation == Rotation.CLOCKWISE_180 && blockState.getValue(AXIS).isHorizontal()) {
+            return blockState.setValue(TYPE, SlabTypeHelper.flipSlabType(blockState.getValue(TYPE)));
         } else {
-            Direction.Axis axis = state.getValue(AXIS);
-            Direction.AxisDirection axisDirection =
-                    slabType == SlabType.TOP ? Direction.AxisDirection.POSITIVE : Direction.AxisDirection.NEGATIVE;
-            return SHAPES.get(Direction.fromAxisAndDirection(axis, axisDirection));
+            return RotatedPillarBlock.rotatePillar(blockState, rotation);
         }
     }
 
     @Override
-    public BlockState rotate(BlockState state, Rotation rotation) {
-        if (rotation == Rotation.CLOCKWISE_180 && state.getValue(AXIS).isHorizontal()) {
-            return state.setValue(TYPE, SlabTypeHelper.flipSlabType(state.getValue(TYPE)));
-        } else {
-            return RotatedPillarBlock.rotatePillar(state, rotation);
-        }
-    }
-
-    @Override
-    public BlockState mirror(BlockState state, Mirror mirror) {
+    public BlockState mirror(BlockState blockState, Mirror mirror) {
         switch (mirror) {
             case LEFT_RIGHT:
-                if (state.getValue(AXIS) == Direction.Axis.Z) {
-                    return state.rotate(Rotation.CLOCKWISE_180);
+                if (blockState.getValue(AXIS) == Direction.Axis.Z) {
+                    return blockState.rotate(Rotation.CLOCKWISE_180);
                 }
             case FRONT_BACK:
-                if (state.getValue(AXIS) == Direction.Axis.X) {
-                    return state.rotate(Rotation.CLOCKWISE_180);
+                if (blockState.getValue(AXIS) == Direction.Axis.X) {
+                    return blockState.rotate(Rotation.CLOCKWISE_180);
                 }
         }
 
-        return super.mirror(state, mirror);
+        return super.mirror(blockState, mirror);
     }
 }
