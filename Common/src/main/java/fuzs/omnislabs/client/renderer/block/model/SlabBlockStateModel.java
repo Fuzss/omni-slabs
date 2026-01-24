@@ -95,28 +95,30 @@ public record SlabBlockStateModel(BlockStateModel.UnbakedRoot model,
         return builder.build();
     }
 
-    private static void rebakeQuadPositions(MutableBakedQuad mutable, Map<Direction.Axis, Vector3fc> axisVectors, Direction.Axis axis, SlabType slabType) {
+    private static void rebakeQuadPositions(MutableBakedQuad bakedQuad, Map<Direction.Axis, Vector3fc> axisVectors, Direction.Axis axis, SlabType slabType) {
         Vector3fc vector3fc = axisVectors.get(axis);
         for (int i = 0; i < BakedQuad.VERTEX_COUNT; i++) {
             if (slabType == SlabType.BOTTOM) {
-                mutable.position(i, mutable.position(i).min(vector3fc, new Vector3f()));
+                bakedQuad.position(i, bakedQuad.position(i).min(vector3fc, new Vector3f()));
             } else if (slabType == SlabType.TOP) {
-                mutable.position(i, mutable.position(i).max(vector3fc, new Vector3f()));
+                bakedQuad.position(i, bakedQuad.position(i).max(vector3fc, new Vector3f()));
             }
         }
+
+        bakedQuad.computeQuadNormals();
     }
 
-    private static void rebakeQuadUVs(MutableBakedQuad mutable, SlabType slabType, Direction.Axis axis, Direction direction) {
+    private static void rebakeQuadUVs(MutableBakedQuad bakedQuad, SlabType slabType, Direction.Axis axis, Direction direction) {
         if (direction != null && direction.getAxis() != axis) {
-            long minUV = mutable.packedUV0();
-            long maxUV = mutable.packedUV2();
+            long minUV = bakedQuad.packedUV0();
+            long maxUV = bakedQuad.packedUV2();
             BlockElementFace.UVs uvs = new BlockElementFace.UVs(UVPair.unpackU(minUV),
                     UVPair.unpackV(minUV),
                     UVPair.unpackU(maxUV),
                     UVPair.unpackV(maxUV));
             BlockElementFace.UVs newUvs = computeSlabUVs(uvs, slabType, axis, direction);
             for (int i = 0; i < BakedQuad.VERTEX_COUNT; i++) {
-                mutable.packedUV(i, UVPair.pack(newUvs.getVertexU(i), newUvs.getVertexV(i)));
+                bakedQuad.packedUV(i, UVPair.pack(newUvs.getVertexU(i), newUvs.getVertexV(i)));
             }
         }
     }

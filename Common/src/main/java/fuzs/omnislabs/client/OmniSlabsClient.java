@@ -12,21 +12,29 @@ import fuzs.puzzleslib.api.client.core.v1.context.RenderTypesContext;
 import fuzs.puzzleslib.api.client.event.v1.entity.player.ClientPlayerNetworkEvents;
 import fuzs.puzzleslib.api.client.event.v1.renderer.ExtractBlockOutlineCallback;
 import fuzs.puzzleslib.api.client.renderer.v1.model.ModelLoadingHelper;
+import fuzs.puzzleslib.api.core.v1.context.PackRepositorySourcesContext;
 import fuzs.puzzleslib.api.event.v1.core.EventPhase;
 import fuzs.puzzleslib.api.event.v1.entity.player.PlayerInteractEvents;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.resources.model.BlockStateModelLoader;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.SlabType;
 
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
 
 public class OmniSlabsClient implements ClientModConstructor {
+    public static final Identifier DISTINCT_SLABS_ID = OmniSlabs.id("distinct_slabs");
 
     @Override
     public void onConstructMod() {
@@ -44,14 +52,23 @@ public class OmniSlabsClient implements ClientModConstructor {
         BlockConversionHandler.getBlockConversions().forEach((Block oldBlock, Block newBlock) -> {
             context.registerBlockStateResolver(newBlock,
                     (ResourceManager resourceManager, Executor executor) -> {
-                        return ModelLoadingHelper.loadBlockState(resourceManager, oldBlock, executor);
+                        return CompletableFuture.supplyAsync(() -> resourceManager.getResource(BlockStateModelLoader.BLOCKSTATE_LISTER.idToFile(
+                                        BuiltInRegistries.BLOCK.getKey(newBlock))), executor)
+                                .thenCompose((Optional<Resource> optional) -> {
+                                    return ModelLoadingHelper.loadBlockState(resourceManager,
+                                            optional.isPresent() ? newBlock : oldBlock,
+                                            executor);
+                                });
                     },
                     (BlockStateModelLoader.LoadedModels loadedModels, BiConsumer<BlockState, BlockStateModel.UnbakedRoot> blockStateConsumer) -> {
                         for (BlockState blockState : newBlock.getStateDefinition().getPossibleStates()) {
                             Direction.Axis axis = blockState.getValue(RotatedSlabBlock.AXIS);
+                            boolean hasBlockModel = loadedModels.models().containsKey(blockState);
                             boolean keepVanillaModel = axis == Direction.Axis.Y;
                             BlockState oldBlockState;
-                            if (keepVanillaModel) {
+                            if (hasBlockModel) {
+                                oldBlockState = blockState;
+                            } else if (keepVanillaModel) {
                                 oldBlockState = oldBlock.withPropertiesOf(blockState);
                             } else {
                                 oldBlockState = oldBlock.withPropertiesOf(blockState)
@@ -60,7 +77,7 @@ public class OmniSlabsClient implements ClientModConstructor {
 
                             BlockStateModel.UnbakedRoot model = loadedModels.models().get(oldBlockState);
                             if (model != null) {
-                                if (keepVanillaModel) {
+                                if (hasBlockModel || keepVanillaModel) {
                                     blockStateConsumer.accept(blockState, model);
                                 } else {
                                     SlabType slabType = blockState.getValue(RotatedSlabBlock.TYPE);
@@ -86,5 +103,10 @@ public class OmniSlabsClient implements ClientModConstructor {
         for (Map.Entry<Block, Block> entry : BlockConversionHandler.getBlockConversions().entrySet()) {
             context.registerChunkRenderType(entry.getValue(), context.getChunkRenderType(entry.getKey()));
         }
+    }
+
+    @Override
+    public void onAddResourcePackFinders(PackRepositorySourcesContext context) {
+        context.registerBuiltInPack(DISTINCT_SLABS_ID, Component.literal("Distinct Slabs"), false);
     }
 }

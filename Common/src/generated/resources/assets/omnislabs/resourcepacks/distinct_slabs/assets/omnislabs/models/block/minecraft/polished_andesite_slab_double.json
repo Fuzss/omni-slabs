@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "minecraft:block/polished_andesite",
+    "side": "omnislabs:block/minecraft/polished_andesite_slab_side"
+  }
+}

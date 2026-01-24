@@ -1,4 +1,4 @@
-package fuzs.omnislabs.mixin;
+package fuzs.omnislabs.fabric.mixin;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import fuzs.omnislabs.world.level.block.RotatedSlabBlock;
@@ -12,27 +12,22 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ServerPlayerGameMode.class)
-abstract class ServerPlayerGameModeMixin {
+abstract class ServerPlayerGameModeFabricMixin {
     @Shadow
     protected ServerLevel level;
     @Shadow
     @Final
     protected ServerPlayer player;
 
-    @SuppressWarnings("UnresolvedLocalCapture")
     @Inject(method = "destroyBlock",
-            at = @At("RETURN"),
-            slice = @Slice(from = @At(value = "INVOKE",
-                                      target = "Lnet/minecraft/server/level/ServerPlayer;preventsBlockDrops()Z")))
+            at = @At(value = "INVOKE",
+                     target = "Lnet/minecraft/world/level/block/Block;destroy(Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V"))
     public void destroyBlock(BlockPos blockPos, CallbackInfoReturnable<Boolean> callback, @Local BlockState blockState) {
-        if (callback.getReturnValueZ() && this.player.preventsBlockDrops()) {
-            if (blockState.getBlock() instanceof RotatedSlabBlock slabBlock) {
-                slabBlock.destroyOnlyOneSlab(this.level, this.player, blockPos, blockState);
-            }
+        if (blockState.getBlock() instanceof RotatedSlabBlock slabBlock) {
+            slabBlock.destroyOnlyOneSlab(this.level, this.player, blockPos, blockState);
         }
     }
 }

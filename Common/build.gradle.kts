@@ -8,9 +8,6 @@ dependencies {
 
 multiloader {
     mixins {
-        mixin(
-            "ServerPlayerGameModeMixin"
-        )
         clientMixin(
             "ClientLevelMixin",
             "MultiPlayerGameModeMixin"

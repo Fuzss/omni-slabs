@@ -9,8 +9,11 @@ dependencies {
 
 multiloader {
     mixins {
+        mixin(
+            "ServerPlayerGameModeFabricMixin"
+        )
         clientMixin(
-            "ClientLevelFabricMixin"
+            "ClientLevelFabricMixin", "MultiPlayerGameModeFabricMixin"
         )
     }
 }

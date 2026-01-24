@@ -9,8 +9,6 @@ import fuzs.omnislabs.util.SlabTypeHelper;
 import fuzs.puzzleslib.api.util.v1.ShapesHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -131,8 +129,6 @@ public class RotatedSlabBlock extends SlabBlock {
      * {@link net.minecraft.world.level.storage.loot.predicates.LootItemBlockStatePropertyCondition} to check for the
      * specific slab block when deciding on the number of slabs to drop. So, we pass the original block state to the
      * super call which handles the drops.
-     *
-     * @see TurtleEggBlock#playerDestroy(Level, Player, BlockPos, BlockState, BlockEntity, ItemStack)
      */
     @Override
     public void playerDestroy(Level level, Player player, BlockPos blockPos, BlockState blockState, @Nullable BlockEntity blockEntity, ItemStack itemStack) {
@@ -140,11 +136,11 @@ public class RotatedSlabBlock extends SlabBlock {
                 .inverse()
                 .getOrDefault(blockState.getBlock(), blockState.getBlock())
                 .withPropertiesOf(blockState);
-        if (level instanceof ServerLevel serverLevel) {
-            SlabType slabType = this.destroyOnlyOneSlab(serverLevel, (ServerPlayer) player, blockPos, blockState);
-            if (slabType != null) {
-                originalBlockState = originalBlockState.setValue(SlabBlock.TYPE, slabType);
-            }
+        SyncedSlabSettings syncedSlabSettings = ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.getOrDefault(player,
+                SyncedSlabSettings.EMPTY);
+        SlabType slabType = syncedSlabSettings.getSlabType(player, blockState, blockPos);
+        if (slabType != null) {
+            originalBlockState = originalBlockState.setValue(SlabBlock.TYPE, slabType);
         }
 
         super.playerDestroy(level, player, blockPos, originalBlockState, blockEntity, itemStack);
@@ -153,18 +149,16 @@ public class RotatedSlabBlock extends SlabBlock {
     /**
      * @see TurtleEggBlock#decreaseEggs(Level, BlockPos, BlockState)
      */
-    public @Nullable SlabType destroyOnlyOneSlab(ServerLevel serverLevel, ServerPlayer serverPlayer, BlockPos blockPos, BlockState blockState) {
-        SyncedSlabSettings syncedSlabSettings = ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.getOrDefault(
-                serverPlayer,
+    public void destroyOnlyOneSlab(Level level, Player player, BlockPos blockPos, BlockState blockState) {
+        SyncedSlabSettings syncedSlabSettings = ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.getOrDefault(player,
                 SyncedSlabSettings.EMPTY);
-        SlabType slabType = syncedSlabSettings.getSlabType(serverPlayer, blockState, blockPos);
+        SlabType slabType = syncedSlabSettings.getSlabType(player, blockState, blockPos);
         if (slabType != null) {
             BlockState remainingBlockState = blockState.setValue(RotatedSlabBlock.TYPE,
                     SlabTypeHelper.flipSlabType(slabType));
-            serverLevel.setBlock(blockPos, remainingBlockState, Block.UPDATE_CLIENTS);
+            int updateFlags = level.isClientSide() ? Block.UPDATE_ALL_IMMEDIATE : Block.UPDATE_CLIENTS;
+            level.setBlock(blockPos, remainingBlockState, updateFlags);
         }
-
-        return slabType;
     }
 
     @Override

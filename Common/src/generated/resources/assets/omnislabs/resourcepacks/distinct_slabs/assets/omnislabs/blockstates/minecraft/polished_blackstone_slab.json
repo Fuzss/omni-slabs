@@ -1,0 +1,40 @@
+{
+  "variants": {
+    "axis=x,type=bottom": {
+      "model": "omnislabs:block/minecraft/polished_blackstone_slab_bottom",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,type=double": {
+      "model": "omnislabs:block/minecraft/polished_blackstone_slab_double",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,type=top": {
+      "model": "omnislabs:block/minecraft/polished_blackstone_slab_top",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,type=bottom": {
+      "model": "omnislabs:block/minecraft/polished_blackstone_slab_bottom"
+    },
+    "axis=y,type=double": {
+      "model": "omnislabs:block/minecraft/polished_blackstone_slab_double"
+    },
+    "axis=y,type=top": {
+      "model": "omnislabs:block/minecraft/polished_blackstone_slab_top"
+    },
+    "axis=z,type=bottom": {
+      "model": "omnislabs:block/minecraft/polished_blackstone_slab_bottom",
+      "x": 270
+    },
+    "axis=z,type=double": {
+      "model": "omnislabs:block/minecraft/polished_blackstone_slab_double",
+      "x": 270
+    },
+    "axis=z,type=top": {
+      "model": "omnislabs:block/minecraft/polished_blackstone_slab_top",
+      "x": 270
+    }
+  }
+}

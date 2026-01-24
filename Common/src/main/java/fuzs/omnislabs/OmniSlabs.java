@@ -6,6 +6,7 @@ import fuzs.omnislabs.handler.BlockConversionHandler;
 import fuzs.omnislabs.init.ModRegistry;
 import fuzs.omnislabs.network.client.ServerboundHitVectorMessage;
 import fuzs.omnislabs.network.client.ServerboundSlabPlacementMessage;
+import fuzs.omnislabs.services.CommonAbstractions;
 import fuzs.omnislabs.world.level.block.RotatedSlabBlock;
 import fuzs.puzzleslib.api.config.v3.ConfigHolder;
 import fuzs.puzzleslib.api.core.v1.ModConstructor;
@@ -42,7 +43,9 @@ public class OmniSlabs implements ModConstructor {
 
     private static void registerEventHandlers() {
         RegistryEntryAddedCallback.registryEntryAdded(Registries.BLOCK)
-                .register(BlockConversionHandler.onRegistryEntryAdded(BLOCK_PREDICATE, RotatedSlabBlock::new, MOD_ID));
+                .register(BlockConversionHandler.onRegistryEntryAdded(BLOCK_PREDICATE,
+                        CommonAbstractions.INSTANCE::createRotatedSlabBlock,
+                        MOD_ID));
         TagsUpdatedCallback.EVENT.register(EventPhase.FIRST,
                 BlockConversionHandler.onTagsUpdated(ModRegistry.UNALTERED_SLABS_BLOCK_TAG, BLOCK_PREDICATE));
     }
