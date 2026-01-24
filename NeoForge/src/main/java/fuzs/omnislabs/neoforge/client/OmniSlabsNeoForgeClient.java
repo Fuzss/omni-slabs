@@ -3,7 +3,6 @@ package fuzs.omnislabs.neoforge.client;
 import fuzs.omnislabs.OmniSlabs;
 import fuzs.omnislabs.client.OmniSlabsClient;
 import fuzs.omnislabs.client.handler.BlockDestroyingHandler;
-import fuzs.omnislabs.data.client.ModLanguageProvider;
 import fuzs.omnislabs.data.client.ModModelProvider;
 import fuzs.puzzleslib.api.client.core.v1.ClientModConstructor;
 import fuzs.puzzleslib.neoforge.api.data.v2.core.DataProviderHelper;
@@ -21,7 +20,7 @@ public class OmniSlabsNeoForgeClient {
     public OmniSlabsNeoForgeClient() {
         ClientModConstructor.construct(OmniSlabs.MOD_ID, OmniSlabsClient::new);
         registerEventHandlers(NeoForge.EVENT_BUS);
-        DataProviderHelper.registerDataProviders(OmniSlabs.MOD_ID, ModLanguageProvider::new, ModModelProvider::new);
+        DataProviderHelper.registerDataProviders(OmniSlabs.MOD_ID, ModModelProvider::new);
         DataProviderHelper.registerDataProviders(OmniSlabsClient.DISTINCT_SLABS_ID,
                 PackType.CLIENT_RESOURCES,
                 ModModelProvider.DistinctSlabs::new);

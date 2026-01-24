@@ -11,7 +11,6 @@ import fuzs.puzzleslib.api.util.v1.ShapesHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
@@ -34,9 +33,6 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
 
-/**
- * @see RotatedPillarBlock
- */
 public class RotatedSlabBlock extends SlabBlock {
     public static final MapCodec<RotatedSlabBlock> CODEC = simpleCodec(RotatedSlabBlock::new);
     public static final EnumProperty<Direction.Axis> AXIS = BlockStateProperties.AXIS;
@@ -71,11 +67,7 @@ public class RotatedSlabBlock extends SlabBlock {
         BlockPos blockPos = context.getClickedPos();
         BlockState blockState = level.getBlockState(blockPos);
         if (blockState.is(this) || !blockState.isAir()) {
-            if (blockState.is(this) || !(blockState.getBlock() instanceof RotatedSlabBlock)) {
-                return super.getStateForPlacement(context);
-            } else {
-                return ModRegistry.DOUBLE_SLAB_BLOCK.value().withPropertiesOf(blockState);
-            }
+            return super.getStateForPlacement(context);
         } else {
             FluidState fluidState = level.getFluidState(blockPos);
             BlockState newBlockState = this.defaultBlockState()
@@ -117,20 +109,19 @@ public class RotatedSlabBlock extends SlabBlock {
     public boolean canBeReplaced(BlockState blockState, BlockPlaceContext context) {
         ItemStack itemInHand = context.getItemInHand();
         SlabType slabType = blockState.getValue(TYPE);
-        if (slabType != SlabType.DOUBLE && itemInHand.getItem() instanceof BlockItem item
-                && item.getBlock() instanceof RotatedSlabBlock) {
+        if (slabType != SlabType.DOUBLE && itemInHand.is(this.asItem())) {
             if (context.replacingClickedOnBlock()) {
                 Direction.Axis axis = blockState.getValue(AXIS);
-                boolean hasClickedTop = context.getClickLocation().get(axis) - context.getClickedPos().get(axis) > 0.5;
+                boolean bl = context.getClickLocation().get(axis) - context.getClickedPos().get(axis) > 0.5;
                 Direction direction = context.getClickedFace();
                 if (slabType == SlabType.BOTTOM) {
                     return direction.getAxis() == axis
                             && direction.getAxisDirection() == Direction.AxisDirection.POSITIVE
-                            || hasClickedTop && direction.getAxis() != axis;
+                            || bl && direction.getAxis() != axis;
                 } else {
                     return direction.getAxis() == axis
                             && direction.getAxisDirection() == Direction.AxisDirection.NEGATIVE
-                            || !hasClickedTop && direction.getAxis() != axis;
+                            || !bl && direction.getAxis() != axis;
                 }
             } else {
                 return true;

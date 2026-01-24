@@ -1,7 +1,6 @@
 package fuzs.omnislabs.data.client;
 
 import fuzs.omnislabs.handler.BlockConversionHandler;
-import fuzs.omnislabs.init.ModRegistry;
 import fuzs.puzzleslib.api.client.data.v2.AbstractModelProvider;
 import fuzs.puzzleslib.api.data.v2.core.DataProviderContext;
 import net.minecraft.client.data.models.BlockModelGenerators;
@@ -33,7 +32,6 @@ public class ModModelProvider extends AbstractModelProvider {
 
     @Override
     public void addBlockModels(BlockModelGenerators blockModelGenerators) {
-        blockModelGenerators.createNonTemplateModelBlock(ModRegistry.DOUBLE_SLAB_BLOCK.value(), Blocks.AIR);
         this.createOmniSlabWithOriginal(Blocks.SMOOTH_STONE_SLAB, Blocks.SMOOTH_STONE, blockModelGenerators);
     }
 
