@@ -44,7 +44,7 @@ public class OmniSlabs implements ModConstructor {
     private static void registerEventHandlers() {
         RegistryEntryAddedCallback.registryEntryAdded(Registries.BLOCK)
                 .register(BlockConversionHandler.onRegistryEntryAdded(BLOCK_PREDICATE,
-                        CommonAbstractions.INSTANCE::createRotatedSlabBlock,
+                        CommonAbstractions.INSTANCE::createSlabBlock,
                         MOD_ID));
         TagsUpdatedCallback.EVENT.register(EventPhase.FIRST,
                 BlockConversionHandler.onTagsUpdated(ModRegistry.UNALTERED_SLABS_BLOCK_TAG, BLOCK_PREDICATE));

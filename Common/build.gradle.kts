@@ -8,6 +8,7 @@ dependencies {
 
 multiloader {
     mixins {
+        mixin("HoneycombItemMixin", "WeatheringCopperMixin")
         clientMixin(
             "ClientLevelMixin",
             "MultiPlayerGameModeMixin"

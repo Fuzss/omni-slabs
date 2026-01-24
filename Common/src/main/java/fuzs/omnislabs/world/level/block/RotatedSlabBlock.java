@@ -1,5 +1,6 @@
 package fuzs.omnislabs.world.level.block;
 
+import com.mojang.serialization.MapCodec;
 import fuzs.omnislabs.OmniSlabs;
 import fuzs.omnislabs.attachment.SyncedSlabSettings;
 import fuzs.omnislabs.config.ServerConfig;
@@ -33,12 +34,18 @@ import org.jspecify.annotations.Nullable;
 import java.util.Map;
 
 public class RotatedSlabBlock extends SlabBlock {
+    public static final MapCodec<RotatedSlabBlock> CODEC = simpleCodec(RotatedSlabBlock::new);
     public static final EnumProperty<Direction.Axis> AXIS = BlockStateProperties.AXIS;
     private static final Map<Direction, VoxelShape> SHAPES = ShapesHelper.rotate(SlabBlock.SHAPE_TOP);
 
     public RotatedSlabBlock(BlockBehaviour.Properties properties) {
         super(properties);
         this.registerDefaultState(this.defaultBlockState().setValue(AXIS, Direction.Axis.Y));
+    }
+
+    @Override
+    public MapCodec<? extends SlabBlock> codec() {
+        return CODEC;
     }
 
     @Override

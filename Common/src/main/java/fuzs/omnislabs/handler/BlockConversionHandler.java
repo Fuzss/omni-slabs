@@ -18,18 +18,21 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 
 import java.util.Map;
-import java.util.function.*;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 public class BlockConversionHandler {
     private static final BiMap<Block, Block> BLOCK_CONVERSIONS = HashBiMap.create();
 
-    public static RegistryEntryAddedCallback<Block> onRegistryEntryAdded(Predicate<Block> filter, Function<BlockBehaviour.Properties, Block> factory, String modId) {
+    public static RegistryEntryAddedCallback<Block> onRegistryEntryAdded(Predicate<Block> filter, BiFunction<Block, BlockBehaviour.Properties, Block> factory, String modId) {
         return (Registry<Block> registry, Identifier id, Block block, BiConsumer<Identifier, Supplier<Block>> registrar) -> {
             if (filter.test(block)) {
                 Identifier identifier = Identifier.fromNamespaceAndPath(modId, id.getNamespace() + "/" + id.getPath());
                 registrar.accept(identifier, () -> {
                     BlockBehaviour.Properties properties = BlockConversionHelper.copyBlockProperties(block, identifier);
-                    Block newBlock = factory.apply(properties);
+                    Block newBlock = factory.apply(block, properties);
                     BLOCK_CONVERSIONS.put(block, newBlock);
                     return newBlock;
                 });
