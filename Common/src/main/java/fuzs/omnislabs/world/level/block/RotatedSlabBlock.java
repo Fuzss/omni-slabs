@@ -33,6 +33,9 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
 
+/**
+ * @see RotatedPillarBlock
+ */
 public class RotatedSlabBlock extends SlabBlock {
     public static final MapCodec<RotatedSlabBlock> CODEC = simpleCodec(RotatedSlabBlock::new);
     public static final EnumProperty<Direction.Axis> AXIS = BlockStateProperties.AXIS;
@@ -67,7 +70,13 @@ public class RotatedSlabBlock extends SlabBlock {
         BlockPos blockPos = context.getClickedPos();
         BlockState blockState = level.getBlockState(blockPos);
         if (blockState.is(this) || !blockState.isAir()) {
-            return super.getStateForPlacement(context);
+            // This allows for original slabs already in the world to properly be turned into our double slabs.
+            Block originalBlock = BlockConversionHandler.getBlockConversions().inverse().get(this);
+            if (originalBlock != null && blockState.is(originalBlock)) {
+                return this.withPropertiesOf(blockState).setValue(TYPE, SlabType.DOUBLE).setValue(WATERLOGGED, false);
+            } else {
+                return super.getStateForPlacement(context);
+            }
         } else {
             FluidState fluidState = level.getFluidState(blockPos);
             BlockState newBlockState = this.defaultBlockState()
@@ -112,16 +121,16 @@ public class RotatedSlabBlock extends SlabBlock {
         if (slabType != SlabType.DOUBLE && itemInHand.is(this.asItem())) {
             if (context.replacingClickedOnBlock()) {
                 Direction.Axis axis = blockState.getValue(AXIS);
-                boolean bl = context.getClickLocation().get(axis) - context.getClickedPos().get(axis) > 0.5;
+                boolean hasClickedTop = context.getClickLocation().get(axis) - context.getClickedPos().get(axis) > 0.5;
                 Direction direction = context.getClickedFace();
                 if (slabType == SlabType.BOTTOM) {
                     return direction.getAxis() == axis
                             && direction.getAxisDirection() == Direction.AxisDirection.POSITIVE
-                            || bl && direction.getAxis() != axis;
+                            || hasClickedTop && direction.getAxis() != axis;
                 } else {
                     return direction.getAxis() == axis
                             && direction.getAxisDirection() == Direction.AxisDirection.NEGATIVE
-                            || !bl && direction.getAxis() != axis;
+                            || !hasClickedTop && direction.getAxis() != axis;
                 }
             } else {
                 return true;

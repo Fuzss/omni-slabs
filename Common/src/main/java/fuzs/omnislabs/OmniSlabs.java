@@ -13,6 +13,7 @@ import fuzs.puzzleslib.api.core.v1.ModConstructor;
 import fuzs.puzzleslib.api.core.v1.context.PayloadTypesContext;
 import fuzs.puzzleslib.api.event.v1.RegistryEntryAddedCallback;
 import fuzs.puzzleslib.api.event.v1.core.EventPhase;
+import fuzs.puzzleslib.api.event.v1.entity.player.PlayerInteractEvents;
 import fuzs.puzzleslib.api.event.v1.server.TagsUpdatedCallback;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
@@ -46,6 +47,8 @@ public class OmniSlabs implements ModConstructor {
                 .register(BlockConversionHandler.onRegistryEntryAdded(BLOCK_PREDICATE,
                         CommonAbstractions.INSTANCE::createSlabBlock,
                         MOD_ID));
+        PlayerInteractEvents.USE_BLOCK.register(BlockConversionHandler.onUseBlock(ModRegistry.UNALTERED_SLABS_BLOCK_TAG,
+                () -> CONFIG.get(ServerConfig.class).enableBlockConversionInteraction));
         TagsUpdatedCallback.EVENT.register(EventPhase.FIRST,
                 BlockConversionHandler.onTagsUpdated(ModRegistry.UNALTERED_SLABS_BLOCK_TAG, BLOCK_PREDICATE));
     }

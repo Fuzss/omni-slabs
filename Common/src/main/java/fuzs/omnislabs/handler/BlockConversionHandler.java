@@ -5,23 +5,31 @@ import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Maps;
 import fuzs.puzzleslib.api.block.v1.BlockConversionHelper;
 import fuzs.puzzleslib.api.event.v1.RegistryEntryAddedCallback;
+import fuzs.puzzleslib.api.event.v1.core.EventResultHolder;
+import fuzs.puzzleslib.api.event.v1.entity.player.PlayerInteractEvents;
 import fuzs.puzzleslib.api.event.v1.server.TagsUpdatedCallback;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.phys.BlockHitResult;
 
 import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 public class BlockConversionHandler {
     private static final BiMap<Block, Block> BLOCK_CONVERSIONS = HashBiMap.create();
@@ -42,6 +50,43 @@ public class BlockConversionHandler {
 
     public static BiMap<Block, Block> getBlockConversions() {
         return Maps.unmodifiableBiMap(BLOCK_CONVERSIONS);
+    }
+
+    public static PlayerInteractEvents.UseBlock onUseBlock(TagKey<Block> unalteredBlocks, BooleanSupplier configOption) {
+        return (Player player, Level level, InteractionHand interactionHand, BlockHitResult hitResult) -> {
+            if (!configOption.getAsBoolean()) {
+                return EventResultHolder.pass();
+            }
+
+            // Allows for toggling between original and converted block variants via shift+right-clicking with an empty hand.
+            if (player.isSecondaryUseActive() && player.getItemInHand(interactionHand).isEmpty()) {
+                BlockPos blockPos = hitResult.getBlockPos();
+                BlockState blockState = level.getBlockState(blockPos);
+                if (!blockState.is(unalteredBlocks)) {
+                    Block newBlock;
+                    Block block = blockState.getBlock();
+                    if (BLOCK_CONVERSIONS.containsKey(block)) {
+                        newBlock = BLOCK_CONVERSIONS.get(block);
+                    } else if (BLOCK_CONVERSIONS.containsValue(block)) {
+                        newBlock = BLOCK_CONVERSIONS.inverse().get(block);
+                    } else {
+                        newBlock = null;
+                    }
+
+                    if (newBlock != null) {
+                        BlockState newBlockState = newBlock.withPropertiesOf(blockState);
+                        newBlockState = Block.updateFromNeighbourShapes(newBlockState, level, blockPos);
+                        level.setBlock(blockPos, newBlockState, Block.UPDATE_ALL);
+                        level.neighborChanged(blockPos, newBlock, null);
+                        level.gameEvent(GameEvent.BLOCK_CHANGE, blockPos, GameEvent.Context.of(player, newBlockState));
+                        level.levelEvent(player, LevelEvent.PARTICLES_AND_SOUND_WAX_ON, blockPos, 0);
+                        return EventResultHolder.interrupt(InteractionResult.SUCCESS);
+                    }
+                }
+            }
+
+            return EventResultHolder.pass();
+        };
     }
 
     public static TagsUpdatedCallback onTagsUpdated(TagKey<Block> unalteredBlocks, Predicate<Block> filter) {
