@@ -1,6 +1,6 @@
 package fuzs.omnislabs.fabric;
 
-import fuzs.omnislabs.OmniSlabs;
+import fuzs.omnislabs.common.OmniSlabs;
 import fuzs.puzzleslib.common.api.core.v1.ModConstructor;
 import net.fabricmc.api.ModInitializer;
 

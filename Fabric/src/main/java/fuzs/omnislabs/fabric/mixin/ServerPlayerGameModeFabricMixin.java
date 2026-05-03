@@ -1,7 +1,7 @@
 package fuzs.omnislabs.fabric.mixin;
 
 import com.llamalad7.mixinextras.sugar.Local;
-import fuzs.omnislabs.world.level.block.RotatedSlabBlock;
+import fuzs.omnislabs.common.world.level.block.RotatedSlabBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;

@@ -2,7 +2,7 @@ package fuzs.omnislabs.neoforge.world.level.block;
 
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import fuzs.omnislabs.world.level.block.WeatheringCopperRotatedSlabBlock;
+import fuzs.omnislabs.common.world.level.block.WeatheringCopperRotatedSlabBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;

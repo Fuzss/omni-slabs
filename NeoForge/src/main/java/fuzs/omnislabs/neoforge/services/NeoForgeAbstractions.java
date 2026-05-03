@@ -2,7 +2,7 @@ package fuzs.omnislabs.neoforge.services;
 
 import fuzs.omnislabs.neoforge.world.level.block.NeoForgeRotatedSlabBlock;
 import fuzs.omnislabs.neoforge.world.level.block.NeoForgeWeatheringCopperRotatedSlabBlock;
-import fuzs.omnislabs.services.CommonAbstractions;
+import fuzs.omnislabs.common.services.CommonAbstractions;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.state.BlockBehaviour;

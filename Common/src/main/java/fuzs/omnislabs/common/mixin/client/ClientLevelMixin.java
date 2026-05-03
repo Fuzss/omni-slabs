@@ -1,4 +1,4 @@
-package fuzs.omnislabs.fabric.mixin.client;
+package fuzs.omnislabs.common.mixin.client;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import fuzs.omnislabs.common.client.handler.BlockDestroyingHandler;
@@ -18,9 +18,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 @Mixin(ClientLevel.class)
-abstract class ClientLevelFabricMixin extends Level {
+abstract class ClientLevelMixin extends Level {
 
-    protected ClientLevelFabricMixin(WritableLevelData levelData, ResourceKey<Level> dimension, RegistryAccess registryAccess, Holder<DimensionType> dimensionTypeRegistration, boolean isClientSide, boolean isDebug, long biomeZoomSeed, int maxChainedNeighborUpdates) {
+    protected ClientLevelMixin(WritableLevelData levelData, ResourceKey<Level> dimension, RegistryAccess registryAccess, Holder<DimensionType> dimensionTypeRegistration, boolean isClientSide, boolean isDebug, long biomeZoomSeed, int maxChainedNeighborUpdates) {
         super(levelData,
                 dimension,
                 registryAccess,
@@ -31,9 +31,9 @@ abstract class ClientLevelFabricMixin extends Level {
                 maxChainedNeighborUpdates);
     }
 
-    @ModifyVariable(method = "addBreakingBlockEffect", at = @At("STORE"))
-    public BlockState addBreakingBlockEffect(BlockState blockState, @Local(argsOnly = true) BlockPos pos) {
-        SlabType slabType = BlockDestroyingHandler.getSlabTypeAt(blockState, pos);
+    @ModifyVariable(method = "addDestroyBlockEffect", at = @At("HEAD"), argsOnly = true)
+    public BlockState addDestroyBlockEffect(BlockState blockState, @Local(argsOnly = true) BlockPos blockPos) {
+        SlabType slabType = BlockDestroyingHandler.getSlabTypeAt(blockState, blockPos);
         return slabType != null ? blockState.setValue(RotatedSlabBlock.TYPE, slabType) : blockState;
     }
 }

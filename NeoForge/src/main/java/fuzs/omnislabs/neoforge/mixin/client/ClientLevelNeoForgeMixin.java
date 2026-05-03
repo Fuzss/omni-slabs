@@ -1,8 +1,8 @@
 package fuzs.omnislabs.neoforge.mixin.client;
 
 import com.llamalad7.mixinextras.sugar.Local;
-import fuzs.omnislabs.client.handler.BlockDestroyingHandler;
-import fuzs.omnislabs.world.level.block.RotatedSlabBlock;
+import fuzs.omnislabs.common.client.handler.BlockDestroyingHandler;
+import fuzs.omnislabs.common.world.level.block.RotatedSlabBlock;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
