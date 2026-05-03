@@ -33,8 +33,8 @@ abstract class ClientLevelNeoForgeMixin extends Level {
 
     @ModifyVariable(method = "addBreakingBlockEffect(Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/Direction;Lnet/minecraft/world/phys/HitResult;)V",
                     at = @At("STORE"))
-    public BlockState addBreakingBlockEffect(BlockState blockState, @Local(argsOnly = true) BlockPos blockPos) {
-        SlabType slabType = BlockDestroyingHandler.getSlabTypeAt(blockState, blockPos);
+    public BlockState addBreakingBlockEffect(BlockState blockState, @Local(argsOnly = true) BlockPos pos) {
+        SlabType slabType = BlockDestroyingHandler.getSlabTypeAt(blockState, pos);
         return slabType != null ? blockState.setValue(RotatedSlabBlock.TYPE, slabType) : blockState;
     }
 }

@@ -1,8 +1,8 @@
 package fuzs.omnislabs.data.client;
 
 import fuzs.omnislabs.handler.BlockConversionHandler;
-import fuzs.puzzleslib.api.client.data.v2.AbstractModelProvider;
-import fuzs.puzzleslib.api.data.v2.core.DataProviderContext;
+import fuzs.puzzleslib.common.api.client.data.v2.AbstractModelProvider;
+import fuzs.puzzleslib.common.api.data.v2.core.DataProviderContext;
 import net.minecraft.client.data.models.BlockModelGenerators;
 import net.minecraft.client.data.models.MultiVariant;
 import net.minecraft.client.data.models.blockstates.BlockModelDefinitionGenerator;
@@ -12,8 +12,8 @@ import net.minecraft.client.data.models.model.ModelTemplate;
 import net.minecraft.client.data.models.model.ModelTemplates;
 import net.minecraft.client.data.models.model.TextureMapping;
 import net.minecraft.client.data.models.model.TextureSlot;
+import net.minecraft.client.resources.model.sprite.Material;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -36,7 +36,7 @@ public class ModModelProvider extends AbstractModelProvider {
     }
 
     public final void createOmniSlabWithOriginal(Block originalBlock, Block baseBlock, BlockModelGenerators blockModelGenerators) {
-        Identifier baseBlockTexture = TextureMapping.getBlockTexture(baseBlock);
+        Material baseBlockTexture = TextureMapping.getBlockTexture(baseBlock);
         Block block = BlockConversionHandler.getBlockConversions().get(originalBlock);
         this.createColumnOmniSlab(block, originalBlock, baseBlockTexture, blockModelGenerators);
     }
@@ -45,12 +45,12 @@ public class ModModelProvider extends AbstractModelProvider {
         this.createColumnOmniSlab(originalBlock, TextureMapping.getBlockTexture(baseBlock), blockModelGenerators);
     }
 
-    public final void createColumnOmniSlab(Block originalBlock, Identifier baseBlockTexture, BlockModelGenerators blockModelGenerators) {
+    public final void createColumnOmniSlab(Block originalBlock, Material baseBlockTexture, BlockModelGenerators blockModelGenerators) {
         Block block = BlockConversionHandler.getBlockConversions().get(originalBlock);
         this.createColumnOmniSlab(block, block, baseBlockTexture, blockModelGenerators);
     }
 
-    public final void createColumnOmniSlab(Block block, Block originalBlock, Identifier baseBlockTexture, BlockModelGenerators blockModelGenerators) {
+    public final void createColumnOmniSlab(Block block, Block originalBlock, Material baseBlockTexture, BlockModelGenerators blockModelGenerators) {
         TextureMapping textureMapping = TextureMapping.column(TextureMapping.getBlockTexture(originalBlock, "_side"),
                 baseBlockTexture);
         this.createOmniSlab(block, textureMapping, ModelTemplates.CUBE_COLUMN, blockModelGenerators);

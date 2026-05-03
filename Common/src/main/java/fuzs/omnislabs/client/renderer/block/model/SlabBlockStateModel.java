@@ -2,12 +2,16 @@ package fuzs.omnislabs.client.renderer.block.model;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import fuzs.puzzleslib.api.client.renderer.v1.model.MutableBakedQuad;
+import fuzs.puzzleslib.common.api.client.renderer.v1.model.MutableBakedQuad;
 import net.minecraft.client.model.geom.builders.UVPair;
-import net.minecraft.client.renderer.block.model.*;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
 import net.minecraft.client.resources.model.ModelBaker;
-import net.minecraft.client.resources.model.QuadCollection;
+import net.minecraft.client.resources.model.SimpleModelWrapper;
+import net.minecraft.client.resources.model.cuboid.CuboidFace;
+import net.minecraft.client.resources.model.geometry.BakedQuad;
+import net.minecraft.client.resources.model.geometry.QuadCollection;
+import net.minecraft.client.resources.model.sprite.Material;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.Util;
@@ -43,31 +47,36 @@ public record SlabBlockStateModel(BlockStateModel.UnbakedRoot model,
 
     @Override
     public BlockStateModel bake(BlockState blockState, ModelBaker modelBaker) {
-        Function<BlockModelPart, BlockModelPart> blockModelPartFunction = Util.memoize((BlockModelPart blockModelPart) -> {
+        Function<BlockStateModelPart, BlockStateModelPart> blockModelPartFunction = Util.memoize((BlockStateModelPart blockModelPart) -> {
             QuadCollection quadCollection = rebakeQuads(blockModelPart, this.axis, this.slabType);
             return new SimpleModelWrapper(quadCollection,
                     blockModelPart.useAmbientOcclusion(),
-                    blockModelPart.particleIcon());
+                    blockModelPart.particleMaterial());
         });
         BlockStateModel blockStateModel = this.model.bake(blockState, modelBaker);
         return new BlockStateModel() {
             @Override
-            public void collectParts(RandomSource randomSource, List<BlockModelPart> output) {
-                List<BlockModelPart> tmpList = new ArrayList<>();
+            public void collectParts(RandomSource randomSource, List<BlockStateModelPart> output) {
+                List<BlockStateModelPart> tmpList = new ArrayList<>();
                 blockStateModel.collectParts(randomSource, tmpList);
-                for (BlockModelPart blockModelPart : tmpList) {
+                for (BlockStateModelPart blockModelPart : tmpList) {
                     output.add(blockModelPartFunction.apply(blockModelPart));
                 }
             }
 
             @Override
-            public TextureAtlasSprite particleIcon() {
-                return blockStateModel.particleIcon();
+            public Material.Baked particleMaterial() {
+                return blockStateModel.particleMaterial();
+            }
+
+            @Override
+            public @BakedQuad.MaterialFlags int materialFlags() {
+                return blockStateModel.materialFlags();
             }
         };
     }
 
-    private static QuadCollection rebakeQuads(BlockModelPart blockModelPart, Direction.Axis axis, SlabType slabType) {
+    private static QuadCollection rebakeQuads(BlockStateModelPart blockModelPart, Direction.Axis axis, SlabType slabType) {
         return switch (slabType) {
             case BOTTOM -> rebakeQuads(blockModelPart, MIN_AXIS_VECTORS, axis, slabType);
             case TOP -> rebakeQuads(blockModelPart, MAX_AXIS_VECTORS, axis, slabType);
@@ -75,7 +84,7 @@ public record SlabBlockStateModel(BlockStateModel.UnbakedRoot model,
         };
     }
 
-    private static QuadCollection rebakeQuads(BlockModelPart blockModelPart, Map<Direction.Axis, Vector3fc> axisVectors, Direction.Axis axis, SlabType slabType) {
+    private static QuadCollection rebakeQuads(BlockStateModelPart blockModelPart, Map<Direction.Axis, Vector3fc> axisVectors, Direction.Axis axis, SlabType slabType) {
         QuadCollection.Builder builder = new QuadCollection.Builder();
         for (Direction direction : VALID_QUAD_FACES) {
             List<BakedQuad> bakedQuads = blockModelPart.getQuads(direction);
@@ -112,30 +121,30 @@ public record SlabBlockStateModel(BlockStateModel.UnbakedRoot model,
         if (direction != null && direction.getAxis() != axis) {
             long minUV = bakedQuad.packedUV0();
             long maxUV = bakedQuad.packedUV2();
-            BlockElementFace.UVs uvs = new BlockElementFace.UVs(UVPair.unpackU(minUV),
+            CuboidFace.UVs uvs = new CuboidFace.UVs(UVPair.unpackU(minUV),
                     UVPair.unpackV(minUV),
                     UVPair.unpackU(maxUV),
                     UVPair.unpackV(maxUV));
-            BlockElementFace.UVs newUvs = computeSlabUVs(uvs, slabType, axis, direction);
+            CuboidFace.UVs newUvs = computeSlabUVs(uvs, slabType, axis, direction);
             for (int i = 0; i < BakedQuad.VERTEX_COUNT; i++) {
                 bakedQuad.packedUV(i, UVPair.pack(newUvs.getVertexU(i), newUvs.getVertexV(i)));
             }
         }
     }
 
-    private static BlockElementFace.UVs computeSlabUVs(BlockElementFace.UVs uvs, SlabType slabType, Direction.Axis axis, Direction direction) {
+    private static CuboidFace.UVs computeSlabUVs(CuboidFace.UVs uvs, SlabType slabType, Direction.Axis axis, Direction direction) {
         boolean isMirrored = isDirectionMirrored(direction, axis);
         boolean isMinUVMirrored = slabType == SlabType.TOP && !isMirrored || slabType == SlabType.BOTTOM && isMirrored;
         boolean isMaxUVMirrored = slabType == SlabType.BOTTOM && !isMirrored || slabType == SlabType.TOP && isMirrored;
         if (axis.isHorizontal() && (axis != Direction.Axis.Z || direction.getAxis() != Direction.Axis.Y)) {
             float textureWidth = (uvs.maxU() - uvs.minU()) / 2.0F;
-            return new BlockElementFace.UVs(isMinUVMirrored ? uvs.minU() + textureWidth : uvs.minU(),
+            return new CuboidFace.UVs(isMinUVMirrored ? uvs.minU() + textureWidth : uvs.minU(),
                     uvs.minV(),
                     isMaxUVMirrored ? uvs.maxU() - textureWidth : uvs.maxU(),
                     uvs.maxV());
         } else {
             float textureHeight = (uvs.maxV() - uvs.minV()) / 2.0F;
-            return new BlockElementFace.UVs(uvs.minU(),
+            return new CuboidFace.UVs(uvs.minU(),
                     isMinUVMirrored ? uvs.minV() + textureHeight : uvs.minV(),
                     uvs.maxU(),
                     isMaxUVMirrored ? uvs.maxV() - textureHeight : uvs.maxV());

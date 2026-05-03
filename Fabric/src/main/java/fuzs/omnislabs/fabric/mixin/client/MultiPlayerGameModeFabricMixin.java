@@ -22,9 +22,9 @@ abstract class MultiPlayerGameModeFabricMixin {
     @Inject(method = "destroyBlock",
             at = @At(value = "INVOKE",
                      target = "Lnet/minecraft/world/level/block/Block;destroy(Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V"))
-    public void destroyBlock(BlockPos blockPos, CallbackInfoReturnable<Boolean> callback, @Local BlockState blockState) {
-        if (blockState.getBlock() instanceof RotatedSlabBlock slabBlock) {
-            slabBlock.destroyOnlyOneSlab(this.minecraft.level, this.minecraft.player, blockPos, blockState);
+    public void destroyBlock(BlockPos pos, CallbackInfoReturnable<Boolean> callback, @Local BlockState oldState) {
+        if (oldState.getBlock() instanceof RotatedSlabBlock slabBlock) {
+            slabBlock.destroyOnlyOneSlab(this.minecraft.level, this.minecraft.player, pos, oldState);
         }
     }
 }

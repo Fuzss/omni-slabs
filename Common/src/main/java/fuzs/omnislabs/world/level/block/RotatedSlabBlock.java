@@ -7,7 +7,7 @@ import fuzs.omnislabs.config.ServerConfig;
 import fuzs.omnislabs.handler.BlockConversionHandler;
 import fuzs.omnislabs.init.ModRegistry;
 import fuzs.omnislabs.util.SlabTypeHelper;
-import fuzs.puzzleslib.api.util.v1.ShapesHelper;
+import fuzs.puzzleslib.common.api.util.v1.ShapesHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.player.Player;

@@ -4,10 +4,12 @@ import fuzs.omnislabs.OmniSlabs;
 import fuzs.omnislabs.client.OmniSlabsClient;
 import fuzs.omnislabs.client.handler.BlockDestroyingHandler;
 import fuzs.omnislabs.data.client.ModModelProvider;
-import fuzs.puzzleslib.api.client.core.v1.ClientModConstructor;
+import fuzs.omnislabs.mixin.client.accessor.BlockBreakingRenderStateAccessor;
+import fuzs.puzzleslib.common.api.client.core.v1.ClientModConstructor;
 import fuzs.puzzleslib.neoforge.api.data.v2.core.DataProviderHelper;
-import net.minecraft.client.renderer.state.BlockBreakingRenderState;
+import net.minecraft.client.renderer.state.level.BlockBreakingRenderState;
 import net.minecraft.server.packs.PackType;
+import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
@@ -28,9 +30,10 @@ public class OmniSlabsNeoForgeClient {
 
     private static void registerEventHandlers(IEventBus eventBus) {
         eventBus.addListener((final ExtractLevelRenderStateEvent event) -> {
-            for (BlockBreakingRenderState renderState : event.getRenderState().blockBreakingRenderStates) {
-                renderState.blockState = BlockDestroyingHandler.getBreakingTextureBlockState(renderState.blockState,
-                        renderState.blockPos);
+            for (BlockBreakingRenderState state : event.getRenderState().blockBreakingRenderStates) {
+                BlockState blockState = BlockDestroyingHandler.getBreakingTextureBlockState(state.blockState(),
+                        state.blockPos());
+                BlockBreakingRenderStateAccessor.class.cast(state).omnislabs$setBlockState(blockState);
             }
         });
     }

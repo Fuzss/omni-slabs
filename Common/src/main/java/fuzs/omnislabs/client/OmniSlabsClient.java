@@ -6,16 +6,15 @@ import fuzs.omnislabs.client.handler.SlabOutlineHandler;
 import fuzs.omnislabs.client.renderer.block.model.SlabBlockStateModel;
 import fuzs.omnislabs.handler.BlockConversionHandler;
 import fuzs.omnislabs.world.level.block.RotatedSlabBlock;
-import fuzs.puzzleslib.api.client.core.v1.ClientModConstructor;
-import fuzs.puzzleslib.api.client.core.v1.context.BlockStateResolverContext;
-import fuzs.puzzleslib.api.client.core.v1.context.RenderTypesContext;
-import fuzs.puzzleslib.api.client.event.v1.entity.player.ClientPlayerNetworkEvents;
-import fuzs.puzzleslib.api.client.event.v1.renderer.ExtractBlockOutlineCallback;
-import fuzs.puzzleslib.api.client.renderer.v1.model.ModelLoadingHelper;
-import fuzs.puzzleslib.api.core.v1.context.PackRepositorySourcesContext;
-import fuzs.puzzleslib.api.event.v1.core.EventPhase;
-import fuzs.puzzleslib.api.event.v1.entity.player.PlayerInteractEvents;
-import net.minecraft.client.renderer.block.model.BlockStateModel;
+import fuzs.puzzleslib.common.api.client.core.v1.ClientModConstructor;
+import fuzs.puzzleslib.common.api.client.core.v1.context.BlockStateResolverContext;
+import fuzs.puzzleslib.common.api.client.event.v1.entity.player.ClientPlayerNetworkEvents;
+import fuzs.puzzleslib.common.api.client.event.v1.renderer.ExtractBlockOutlineCallback;
+import fuzs.puzzleslib.common.api.client.renderer.v1.model.ModelLoadingHelper;
+import fuzs.puzzleslib.common.api.core.v1.context.PackRepositorySourcesContext;
+import fuzs.puzzleslib.common.api.event.v1.core.EventPhase;
+import fuzs.puzzleslib.common.api.event.v1.entity.player.PlayerInteractEvents;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 import net.minecraft.client.resources.model.BlockStateModelLoader;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -27,7 +26,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.SlabType;
 
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -95,14 +93,6 @@ public class OmniSlabsClient implements ClientModConstructor {
                         }
                     });
         });
-    }
-
-    @Override
-    public void onRegisterBlockRenderTypes(RenderTypesContext<Block> context) {
-        // this runs deferred by default, so we should have all entries from other mods available to us
-        for (Map.Entry<Block, Block> entry : BlockConversionHandler.getBlockConversions().entrySet()) {
-            context.registerChunkRenderType(entry.getValue(), context.getChunkRenderType(entry.getKey()));
-        }
     }
 
     @Override

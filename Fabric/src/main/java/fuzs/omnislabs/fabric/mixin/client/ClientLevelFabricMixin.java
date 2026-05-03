@@ -32,8 +32,8 @@ abstract class ClientLevelFabricMixin extends Level {
     }
 
     @ModifyVariable(method = "addBreakingBlockEffect", at = @At("STORE"))
-    public BlockState addBreakingBlockEffect(BlockState blockState, @Local(argsOnly = true) BlockPos blockPos) {
-        SlabType slabType = BlockDestroyingHandler.getSlabTypeAt(blockState, blockPos);
+    public BlockState addBreakingBlockEffect(BlockState blockState, @Local(argsOnly = true) BlockPos pos) {
+        SlabType slabType = BlockDestroyingHandler.getSlabTypeAt(blockState, pos);
         return slabType != null ? blockState.setValue(RotatedSlabBlock.TYPE, slabType) : blockState;
     }
 }
