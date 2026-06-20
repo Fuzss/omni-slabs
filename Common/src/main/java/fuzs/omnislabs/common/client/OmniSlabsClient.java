@@ -5,9 +5,11 @@ import fuzs.omnislabs.common.client.handler.BlockDestroyingHandler;
 import fuzs.omnislabs.common.client.handler.SlabOutlineHandler;
 import fuzs.omnislabs.common.client.renderer.block.model.SlabBlockStateModel;
 import fuzs.omnislabs.common.handler.BlockConversionHandler;
+import fuzs.omnislabs.common.init.ModRegistry;
 import fuzs.omnislabs.common.world.level.block.RotatedSlabBlock;
 import fuzs.puzzleslib.common.api.client.core.v1.ClientModConstructor;
 import fuzs.puzzleslib.common.api.client.core.v1.context.BlockStateResolverContext;
+import fuzs.puzzleslib.common.api.client.event.v1.ClientTagsUpdatedCallback;
 import fuzs.puzzleslib.common.api.client.event.v1.entity.player.ClientPlayerNetworkEvents;
 import fuzs.puzzleslib.common.api.client.event.v1.renderer.ExtractBlockOutlineCallback;
 import fuzs.puzzleslib.common.api.client.renderer.v1.model.ModelLoadingHelper;
@@ -40,6 +42,9 @@ public class OmniSlabsClient implements ClientModConstructor {
     }
 
     private static void registerEventHandlers() {
+        ClientTagsUpdatedCallback.EVENT.register(EventPhase.FIRST,
+                BlockConversionHandler.onClientTagsUpdated(ModRegistry.UNALTERED_SLABS_BLOCK_TAG,
+                        OmniSlabs.BLOCK_PREDICATE)::accept);
         ExtractBlockOutlineCallback.EVENT.register(SlabOutlineHandler::onExtractBlockOutline);
         PlayerInteractEvents.ATTACK_BLOCK.register(EventPhase.BEFORE, BlockDestroyingHandler::onAttackBlock);
         ClientPlayerNetworkEvents.JOIN.register(BlockDestroyingHandler::onPlayerJoin);

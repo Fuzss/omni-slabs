@@ -7,13 +7,13 @@ import fuzs.puzzleslib.common.api.block.v1.BlockConversionHelper;
 import fuzs.puzzleslib.common.api.event.v1.RegistryEntryAddedCallback;
 import fuzs.puzzleslib.common.api.event.v1.core.EventResultHolder;
 import fuzs.puzzleslib.common.api.event.v1.entity.player.PlayerInteractEvents;
-import fuzs.puzzleslib.common.api.event.v1.server.TagsUpdatedCallback;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.ReloadableServerResources;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -89,18 +89,28 @@ public class BlockConversionHandler {
         };
     }
 
-    public static TagsUpdatedCallback onTagsUpdated(TagKey<Block> unalteredBlocks, Predicate<Block> filter) {
-        return (HolderLookup.Provider registries, boolean isClientUpdate) -> {
-            for (Map.Entry<ResourceKey<Item>, Item> entry : BuiltInRegistries.ITEM.entrySet()) {
-                if (entry.getValue() instanceof BlockItem blockItem) {
-                    Block block = blockItem.getBlock();
-                    setItemForBlock(filter, blockItem, block);
-                    setBlockForItem(unalteredBlocks, blockItem, block);
-                }
-            }
-
-            BLOCK_CONVERSIONS.forEach(BlockConversionHelper::copyBoundTags);
+    public static Consumer<RegistryAccess> onClientTagsUpdated(TagKey<Block> unalteredBlocks, Predicate<Block> filter) {
+        return (RegistryAccess registries) -> {
+            onTagsUpdated(unalteredBlocks, filter);
         };
+    }
+
+    public static BiConsumer<ReloadableServerResources, RegistryAccess> onServerResourcesLoad(TagKey<Block> unalteredBlocks, Predicate<Block> filter) {
+        return (ReloadableServerResources serverResources, RegistryAccess registries) -> {
+            onTagsUpdated(unalteredBlocks, filter);
+        };
+    }
+
+    private static void onTagsUpdated(TagKey<Block> unalteredBlocks, Predicate<Block> filter) {
+        for (Map.Entry<ResourceKey<Item>, Item> entry : BuiltInRegistries.ITEM.entrySet()) {
+            if (entry.getValue() instanceof BlockItem blockItem) {
+                Block block = blockItem.getBlock();
+                setItemForBlock(filter, blockItem, block);
+                setBlockForItem(unalteredBlocks, blockItem, block);
+            }
+        }
+
+        BLOCK_CONVERSIONS.forEach(BlockConversionHelper::copyBoundTags);
     }
 
     private static void setItemForBlock(Predicate<Block> filter, BlockItem blockItem, Block block) {

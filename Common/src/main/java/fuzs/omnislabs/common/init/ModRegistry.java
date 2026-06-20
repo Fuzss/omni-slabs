@@ -8,12 +8,12 @@ import fuzs.puzzleslib.common.api.init.v3.tags.TagFactory;
 import fuzs.puzzleslib.common.api.network.v4.PlayerSet;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.level.block.Block;
 
 public class ModRegistry {
     public static final DataAttachmentType<Entity, SyncedSlabSettings> SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE = DataAttachmentRegistry.<SyncedSlabSettings>entityBuilder()
-            .defaultValue(EntityType.PLAYER, SyncedSlabSettings.EMPTY)
+            .defaultValue(EntityTypes.PLAYER, SyncedSlabSettings.EMPTY)
             .networkSynchronized(SyncedSlabSettings.STREAM_CODEC, PlayerSet::ofEntity)
             .build(OmniSlabs.id("synced_slab_settings"));
 
