@@ -122,9 +122,11 @@ public class ModModelProvider extends AbstractModelProvider {
             this.createColumnOmniSlab(Blocks.POLISHED_BLACKSTONE_SLAB,
                     Blocks.POLISHED_BLACKSTONE,
                     blockModelGenerators);
+            this.createColumnOmniSlab(Blocks.POLISHED_CINNABAR_SLAB, Blocks.POLISHED_CINNABAR, blockModelGenerators);
             this.createColumnOmniSlab(Blocks.POLISHED_DEEPSLATE_SLAB, Blocks.POLISHED_DEEPSLATE, blockModelGenerators);
             this.createColumnOmniSlab(Blocks.POLISHED_DIORITE_SLAB, Blocks.POLISHED_DIORITE, blockModelGenerators);
             this.createColumnOmniSlab(Blocks.POLISHED_GRANITE_SLAB, Blocks.POLISHED_GRANITE, blockModelGenerators);
+            this.createColumnOmniSlab(Blocks.POLISHED_SULFUR_SLAB, Blocks.POLISHED_SULFUR, blockModelGenerators);
             this.createColumnOmniSlab(Blocks.POLISHED_TUFF_SLAB, Blocks.POLISHED_TUFF, blockModelGenerators);
             this.createColumnOmniSlab(Blocks.PRISMARINE_BRICK_SLAB, Blocks.PRISMARINE_BRICKS, blockModelGenerators);
             this.createColumnOmniSlab(Blocks.QUARTZ_SLAB,
