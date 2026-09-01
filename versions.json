@@ -4,7 +4,9 @@
     "26.1.x": "maintained",
     "26.2.x": "primary"
   },
-  "properties": {
-    "distributions.github.slug": "omni-slabs"
+  "distributions": {
+    "github": {
+      "slug": "omni-slabs"
+    }
   }
 }
