@@ -68,58 +68,68 @@ public class ModModelProvider extends AbstractModelProvider {
      * @see BlockModelGenerators#createSmoothStoneSlab()
      */
     public final void createOmniSlab(Block block, TextureMapping textureMapping, ModelTemplate modelTemplate, BlockModelGenerators blockModelGenerators) {
-        Variant bottomVariant = plainVariant(ModelTemplates.SLAB_BOTTOM.createWithOverride(block,
+        ResourceLocation bottomVariant = ModelTemplates.SLAB_BOTTOM.createWithOverride(block,
                 "_bottom",
                 textureMapping,
-                blockModelGenerators.modelOutput));
-        Variant topVariant = plainVariant(ModelTemplates.SLAB_TOP.createWithOverride(block,
+                blockModelGenerators.modelOutput);
+        ResourceLocation topVariant = ModelTemplates.SLAB_TOP.createWithOverride(block,
                 "_top",
                 textureMapping,
-                blockModelGenerators.modelOutput));
-        Variant doubleVariant = plainVariant(modelTemplate.createWithOverride(block,
+                blockModelGenerators.modelOutput);
+        ResourceLocation doubleVariant = modelTemplate.createWithOverride(block,
                 "_double",
                 textureMapping,
-                blockModelGenerators.modelOutput));
+                blockModelGenerators.modelOutput);
         blockModelGenerators.blockStateOutput.accept(createSlab(block, bottomVariant, topVariant, doubleVariant));
-    }
-
-    /**
-     * Copied from Minecraft 26.2.
-     */
-    @Deprecated
-    public static Variant plainVariant(ResourceLocation model) {
-        return Variant.variant().with(VariantProperties.MODEL, model);
     }
 
     /**
      * @see BlockModelGenerators#createSlab(Block, ResourceLocation, ResourceLocation, ResourceLocation)
      */
-    public static BlockStateGenerator createSlab(Block block, Variant bottomVariant, Variant topVariant, Variant doubleVariant) {
+    public static BlockStateGenerator createSlab(Block block, ResourceLocation bottomVariant, ResourceLocation topVariant, ResourceLocation doubleVariant) {
         return MultiVariantGenerator.multiVariant(block)
                 .with(PropertyDispatch.properties(BlockStateProperties.SLAB_TYPE, BlockStateProperties.AXIS)
-                        .select(SlabType.BOTTOM, Direction.Axis.Y, bottomVariant)
-                        .select(SlabType.TOP, Direction.Axis.Y, topVariant)
-                        .select(SlabType.DOUBLE, Direction.Axis.Y, doubleVariant)
+                        .select(SlabType.BOTTOM,
+                                Direction.Axis.Y,
+                                Variant.variant().with(VariantProperties.MODEL, bottomVariant))
+                        .select(SlabType.TOP,
+                                Direction.Axis.Y,
+                                Variant.variant().with(VariantProperties.MODEL, topVariant))
+                        .select(SlabType.DOUBLE,
+                                Direction.Axis.Y,
+                                Variant.variant().with(VariantProperties.MODEL, doubleVariant))
                         .select(SlabType.BOTTOM,
                                 Direction.Axis.Z,
-                                bottomVariant.with(VariantProperties.X_ROT, VariantProperties.Rotation.R270))
+                                Variant.variant()
+                                        .with(VariantProperties.MODEL, bottomVariant)
+                                        .with(VariantProperties.X_ROT, VariantProperties.Rotation.R270))
                         .select(SlabType.TOP,
                                 Direction.Axis.Z,
-                                topVariant.with(VariantProperties.X_ROT, VariantProperties.Rotation.R270))
+                                Variant.variant()
+                                        .with(VariantProperties.MODEL, topVariant)
+                                        .with(VariantProperties.X_ROT, VariantProperties.Rotation.R270))
                         .select(SlabType.DOUBLE,
                                 Direction.Axis.Z,
-                                doubleVariant.with(VariantProperties.X_ROT, VariantProperties.Rotation.R270))
+                                Variant.variant()
+                                        .with(VariantProperties.MODEL, doubleVariant)
+                                        .with(VariantProperties.X_ROT, VariantProperties.Rotation.R270))
                         .select(SlabType.BOTTOM,
                                 Direction.Axis.X,
-                                bottomVariant.with(VariantProperties.X_ROT, VariantProperties.Rotation.R90)
+                                Variant.variant()
+                                        .with(VariantProperties.MODEL, bottomVariant)
+                                        .with(VariantProperties.X_ROT, VariantProperties.Rotation.R90)
                                         .with(VariantProperties.Y_ROT, VariantProperties.Rotation.R90))
                         .select(SlabType.TOP,
                                 Direction.Axis.X,
-                                topVariant.with(VariantProperties.X_ROT, VariantProperties.Rotation.R90)
+                                Variant.variant()
+                                        .with(VariantProperties.MODEL, topVariant)
+                                        .with(VariantProperties.X_ROT, VariantProperties.Rotation.R90)
                                         .with(VariantProperties.Y_ROT, VariantProperties.Rotation.R90))
                         .select(SlabType.DOUBLE,
                                 Direction.Axis.X,
-                                doubleVariant.with(VariantProperties.X_ROT, VariantProperties.Rotation.R90)
+                                Variant.variant()
+                                        .with(VariantProperties.MODEL, doubleVariant)
+                                        .with(VariantProperties.X_ROT, VariantProperties.Rotation.R90)
                                         .with(VariantProperties.Y_ROT, VariantProperties.Rotation.R90)));
     }
 
