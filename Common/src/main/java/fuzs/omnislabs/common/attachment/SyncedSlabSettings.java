@@ -13,7 +13,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.phys.Vec3;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 public record SyncedSlabSettings(Vec3 hitVector, SlabActionType precisePlacement, SlabActionType preciseDestruction) {
     public static final SyncedSlabSettings EMPTY = new SyncedSlabSettings(Vec3.ZERO,

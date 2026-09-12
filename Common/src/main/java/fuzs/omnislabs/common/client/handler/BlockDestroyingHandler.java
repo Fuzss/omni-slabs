@@ -8,8 +8,8 @@ import fuzs.omnislabs.common.init.ModRegistry;
 import fuzs.omnislabs.common.network.client.ServerboundHitVectorMessage;
 import fuzs.omnislabs.common.network.client.ServerboundSlabPlacementMessage;
 import fuzs.omnislabs.common.world.level.block.RotatedSlabBlock;
-import fuzs.puzzleslib.common.api.event.v1.core.EventResult;
-import fuzs.puzzleslib.common.api.network.v4.MessageSender;
+import fuzs.puzzleslib.api.event.v1.core.EventResult;
+import fuzs.puzzleslib.api.network.v4.MessageSender;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
@@ -25,7 +25,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 

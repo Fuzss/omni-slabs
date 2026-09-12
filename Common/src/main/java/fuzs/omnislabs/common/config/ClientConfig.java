@@ -1,8 +1,8 @@
 package fuzs.omnislabs.common.config;
 
 import fuzs.omnislabs.common.client.handler.BlockDestroyingHandler;
-import fuzs.puzzleslib.common.api.config.v3.Config;
-import fuzs.puzzleslib.common.api.config.v3.ConfigCore;
+import fuzs.puzzleslib.api.config.v3.Config;
+import fuzs.puzzleslib.api.config.v3.ConfigCore;
 import net.minecraft.client.Minecraft;
 
 public class ClientConfig implements ConfigCore {

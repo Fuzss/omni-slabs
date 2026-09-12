@@ -4,17 +4,17 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.MapMaker;
 import com.google.common.collect.Maps;
-import fuzs.puzzleslib.common.api.block.v1.BlockConversionHelper;
-import fuzs.puzzleslib.common.api.event.v1.AddBlockEntityTypeBlocksCallback;
-import fuzs.puzzleslib.common.api.event.v1.RegistryEntryAddedCallback;
-import fuzs.puzzleslib.common.api.event.v1.core.EventResultHolder;
-import fuzs.puzzleslib.common.api.event.v1.entity.player.PlayerInteractEvents;
+import fuzs.puzzleslib.api.block.v1.BlockConversionHelper;
+import fuzs.puzzleslib.api.event.v1.AddBlockEntityTypeBlocksCallback;
+import fuzs.puzzleslib.api.event.v1.RegistryEntryAddedCallback;
+import fuzs.puzzleslib.api.event.v1.core.EventResultHolder;
+import fuzs.puzzleslib.api.event.v1.entity.player.PlayerInteractEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.ReloadableServerResources;
 import net.minecraft.tags.TagKey;
@@ -32,7 +32,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.BlockHitResult;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.function.*;
@@ -44,9 +44,9 @@ public class BlockConversionHandler {
             .makeMap();
 
     public static RegistryEntryAddedCallback<Block> onRegistryEntryAdded(Predicate<Block> filter, BiFunction<Block, BlockBehaviour.Properties, Block> factory, String modId) {
-        return (Registry<Block> registry, Identifier id, Block block, BiConsumer<Identifier, Supplier<Block>> registrar) -> {
+        return (Registry<Block> registry, ResourceLocation id, Block block, BiConsumer<ResourceLocation, Supplier<Block>> registrar) -> {
             if (filter.test(block)) {
-                Identifier identifier = Identifier.fromNamespaceAndPath(modId, id.getNamespace() + "/" + id.getPath());
+                ResourceLocation identifier = ResourceLocation.fromNamespaceAndPath(modId, id.getNamespace() + "/" + id.getPath());
                 registrar.accept(identifier, () -> {
                     BlockBehaviour.Properties properties = BlockConversionHelper.copyBlockProperties(block, identifier);
                     Block newBlock = factory.apply(block, properties);

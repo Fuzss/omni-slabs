@@ -3,7 +3,7 @@ package fuzs.omnislabs.common.client.handler;
 import fuzs.omnislabs.common.attachment.SyncedSlabSettings;
 import fuzs.omnislabs.common.init.ModRegistry;
 import fuzs.omnislabs.common.world.level.block.RotatedSlabBlock;
-import fuzs.puzzleslib.common.api.event.v1.core.EventResultHolder;
+import fuzs.puzzleslib.api.event.v1.core.EventResultHolder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;

@@ -2,7 +2,7 @@ package fuzs.omnislabs.common.client.renderer.block.model;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import fuzs.puzzleslib.common.api.client.renderer.v1.model.MutableBakedQuad;
+import fuzs.puzzleslib.api.client.renderer.v1.model.MutableBakedQuad;
 import net.minecraft.client.model.geom.builders.UVPair;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
@@ -14,7 +14,7 @@ import net.minecraft.client.resources.model.geometry.QuadCollection;
 import net.minecraft.client.resources.model.sprite.Material;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
-import net.minecraft.util.Util;
+import net.minecraft.Util;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import org.joml.Vector3f;

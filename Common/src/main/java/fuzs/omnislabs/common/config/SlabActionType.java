@@ -1,7 +1,7 @@
 package fuzs.omnislabs.common.config;
 
 import com.mojang.serialization.Codec;
-import fuzs.puzzleslib.common.api.network.v4.codec.ExtraStreamCodecs;
+import fuzs.puzzleslib.api.network.v4.codec.ExtraStreamCodecs;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.StringRepresentable;

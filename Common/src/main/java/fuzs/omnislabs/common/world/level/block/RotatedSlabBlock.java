@@ -7,7 +7,7 @@ import fuzs.omnislabs.common.config.ServerConfig;
 import fuzs.omnislabs.common.handler.BlockConversionHandler;
 import fuzs.omnislabs.common.init.ModRegistry;
 import fuzs.omnislabs.common.util.SlabTypeHelper;
-import fuzs.puzzleslib.common.api.util.v1.ShapesHelper;
+import fuzs.puzzleslib.api.util.v1.ShapesHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.player.Player;
@@ -29,7 +29,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 

@@ -8,15 +8,15 @@ import fuzs.omnislabs.common.network.client.ServerboundHitVectorMessage;
 import fuzs.omnislabs.common.network.client.ServerboundSlabPlacementMessage;
 import fuzs.omnislabs.common.services.CommonAbstractions;
 import fuzs.omnislabs.common.world.level.block.RotatedSlabBlock;
-import fuzs.puzzleslib.common.api.config.v3.ConfigHolder;
-import fuzs.puzzleslib.common.api.core.v1.ModConstructor;
-import fuzs.puzzleslib.common.api.core.v1.context.PayloadTypesContext;
-import fuzs.puzzleslib.common.api.event.v1.RegistryEntryAddedCallback;
-import fuzs.puzzleslib.common.api.event.v1.core.EventPhase;
-import fuzs.puzzleslib.common.api.event.v1.entity.player.PlayerInteractEvents;
-import fuzs.puzzleslib.common.api.event.v1.server.ServerResourcesLoadCallback;
+import fuzs.puzzleslib.api.config.v3.ConfigHolder;
+import fuzs.puzzleslib.api.core.v1.ModConstructor;
+import fuzs.puzzleslib.api.core.v1.context.PayloadTypesContext;
+import fuzs.puzzleslib.api.event.v1.RegistryEntryAddedCallback;
+import fuzs.puzzleslib.api.event.v1.core.EventPhase;
+import fuzs.puzzleslib.api.event.v1.entity.player.PlayerInteractEvents;
+import fuzs.puzzleslib.api.event.v1.server.ServerResourcesLoadCallback;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SlabBlock;
 import org.slf4j.Logger;
@@ -60,7 +60,7 @@ public class OmniSlabs implements ModConstructor {
         context.playToServer(ServerboundSlabPlacementMessage.class, ServerboundSlabPlacementMessage.STREAM_CODEC);
     }
 
-    public static Identifier id(String path) {
-        return Identifier.fromNamespaceAndPath(MOD_ID, path);
+    public static ResourceLocation id(String path) {
+        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
     }
 }

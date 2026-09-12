@@ -5,7 +5,7 @@ import fuzs.omnislabs.common.client.OmniSlabsClient;
 import fuzs.omnislabs.common.client.handler.BlockDestroyingHandler;
 import fuzs.omnislabs.common.data.client.ModModelProvider;
 import fuzs.omnislabs.common.mixin.client.accessor.BlockBreakingRenderStateAccessor;
-import fuzs.puzzleslib.common.api.client.core.v1.ClientModConstructor;
+import fuzs.puzzleslib.api.client.core.v1.ClientModConstructor;
 import fuzs.puzzleslib.neoforge.api.data.v2.core.DataProviderHelper;
 import net.minecraft.client.renderer.state.level.BlockBreakingRenderState;
 import net.minecraft.server.packs.PackType;

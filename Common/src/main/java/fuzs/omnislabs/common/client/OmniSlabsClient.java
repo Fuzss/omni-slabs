@@ -7,21 +7,21 @@ import fuzs.omnislabs.common.client.renderer.block.model.SlabBlockStateModel;
 import fuzs.omnislabs.common.handler.BlockConversionHandler;
 import fuzs.omnislabs.common.init.ModRegistry;
 import fuzs.omnislabs.common.world.level.block.RotatedSlabBlock;
-import fuzs.puzzleslib.common.api.client.core.v1.ClientModConstructor;
-import fuzs.puzzleslib.common.api.client.core.v1.context.BlockStateResolverContext;
-import fuzs.puzzleslib.common.api.client.event.v1.ClientTagsUpdatedCallback;
-import fuzs.puzzleslib.common.api.client.event.v1.entity.player.ClientPlayerNetworkEvents;
-import fuzs.puzzleslib.common.api.client.event.v1.renderer.ExtractBlockOutlineCallback;
-import fuzs.puzzleslib.common.api.client.renderer.v1.model.ModelLoadingHelper;
-import fuzs.puzzleslib.common.api.core.v1.context.PackRepositorySourcesContext;
-import fuzs.puzzleslib.common.api.event.v1.core.EventPhase;
-import fuzs.puzzleslib.common.api.event.v1.entity.player.PlayerInteractEvents;
+import fuzs.puzzleslib.api.client.core.v1.ClientModConstructor;
+import fuzs.puzzleslib.api.client.core.v1.context.BlockStateResolverContext;
+import fuzs.puzzleslib.api.client.event.v1.ClientTagsUpdatedCallback;
+import fuzs.puzzleslib.api.client.event.v1.entity.player.ClientPlayerNetworkEvents;
+import fuzs.puzzleslib.api.client.event.v1.renderer.ExtractBlockOutlineCallback;
+import fuzs.puzzleslib.api.client.renderer.v1.model.ModelLoadingHelper;
+import fuzs.puzzleslib.api.core.v1.context.PackRepositorySourcesContext;
+import fuzs.puzzleslib.api.event.v1.core.EventPhase;
+import fuzs.puzzleslib.api.event.v1.entity.player.PlayerInteractEvents;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 import net.minecraft.client.resources.model.BlockStateModelLoader;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.level.block.Block;
@@ -34,7 +34,7 @@ import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
 
 public class OmniSlabsClient implements ClientModConstructor {
-    public static final Identifier DISTINCT_SLABS_ID = OmniSlabs.id("distinct_slabs");
+    public static final ResourceLocation DISTINCT_SLABS_ID = OmniSlabs.id("distinct_slabs");
 
     @Override
     public void onConstructMod() {
