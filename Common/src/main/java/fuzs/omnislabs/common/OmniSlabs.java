@@ -50,8 +50,7 @@ public class OmniSlabs implements ModConstructor {
         PlayerInteractEvents.USE_BLOCK.register(BlockConversionHandler.onUseBlock(ModRegistry.UNALTERED_SLABS_BLOCK_TAG,
                 () -> CONFIG.get(ServerConfig.class).enableBlockConversionInteraction));
         ServerResourcesLoadCallback.EVENT.register(EventPhase.FIRST,
-                BlockConversionHandler.onServerResourcesLoad(ModRegistry.UNALTERED_SLABS_BLOCK_TAG,
-                        BLOCK_PREDICATE)::accept);
+                BlockConversionHandler.onTagsUpdated(ModRegistry.UNALTERED_SLABS_BLOCK_TAG, BLOCK_PREDICATE)::accept);
     }
 
     @Override

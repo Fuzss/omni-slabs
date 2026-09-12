@@ -1,6 +1,7 @@
 package fuzs.omnislabs.common.world.level.block;
 
 import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import fuzs.omnislabs.common.OmniSlabs;
 import fuzs.omnislabs.common.attachment.SyncedSlabSettings;
 import fuzs.omnislabs.common.config.ServerConfig;
@@ -37,13 +38,22 @@ import java.util.Map;
  * @see RotatedPillarBlock
  */
 public class RotatedSlabBlock extends SlabBlock {
-    public static final MapCodec<RotatedSlabBlock> CODEC = simpleCodec(RotatedSlabBlock::new);
+    public static final MapCodec<RotatedSlabBlock> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+            BlockTypes.CODEC.fieldOf("block").forGetter(block -> block.block)).apply(instance, RotatedSlabBlock::new));
     public static final EnumProperty<Direction.Axis> AXIS = BlockStateProperties.AXIS;
-    private static final Map<Direction, VoxelShape> SHAPES = ShapesHelper.rotate(SlabBlock.SHAPE_TOP);
+    private static final Map<Direction, VoxelShape> SHAPES = ShapesHelper.rotate(SlabBlock.TOP_AABB);
 
-    public RotatedSlabBlock(BlockBehaviour.Properties properties) {
-        super(properties);
+    protected final Block block;
+
+    public RotatedSlabBlock(Block block) {
+        super(BlockBehaviour.Properties.ofFullCopy(block).dropsLike(block));
+        this.block = block;
         this.registerDefaultState(this.defaultBlockState().setValue(AXIS, Direction.Axis.Y));
+    }
+
+    @Override
+    public String getDescriptionId() {
+        return this.block.getDescriptionId();
     }
 
     @Override
@@ -89,7 +99,7 @@ public class RotatedSlabBlock extends SlabBlock {
                 Vec3 vec3 = context.getClickLocation()
                         .subtract(blockPos.getX(), blockPos.getY(), blockPos.getZ())
                         .subtract(0.5, 0.5, 0.5);
-                Direction placementDirection = Direction.getApproximateNearest(axis != Direction.Axis.X ? vec3.x : 0.0,
+                Direction placementDirection = Direction.getNearest(axis != Direction.Axis.X ? vec3.x : 0.0,
                         axis != Direction.Axis.Y ? vec3.y : 0.0,
                         axis != Direction.Axis.Z ? vec3.z : 0.0);
                 return newBlockState.setValue(AXIS, placementDirection.getAxis())

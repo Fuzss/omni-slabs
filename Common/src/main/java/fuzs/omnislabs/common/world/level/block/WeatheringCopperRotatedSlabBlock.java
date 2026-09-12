@@ -5,9 +5,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.block.ChangeOverTimeBlock;
-import net.minecraft.world.level.block.SlabBlock;
-import net.minecraft.world.level.block.WeatheringCopper;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
@@ -15,13 +13,14 @@ import net.minecraft.world.level.block.state.BlockState;
  */
 public class WeatheringCopperRotatedSlabBlock extends RotatedSlabBlock implements WeatheringCopper {
     public static final MapCodec<WeatheringCopperRotatedSlabBlock> CODEC = RecordCodecBuilder.mapCodec((instance) -> instance.group(
-            WeatheringCopper.WeatherState.CODEC.fieldOf("weathering_state").forGetter(ChangeOverTimeBlock::getAge),
-            propertiesCodec()).apply(instance, WeatheringCopperRotatedSlabBlock::new));
+                    WeatheringCopper.WeatherState.CODEC.fieldOf("weathering_state").forGetter(ChangeOverTimeBlock::getAge),
+                    BlockTypes.CODEC.fieldOf("block").forGetter(block -> block.block))
+            .apply(instance, WeatheringCopperRotatedSlabBlock::new));
 
     private final WeatheringCopper.WeatherState weatherState;
 
-    public WeatheringCopperRotatedSlabBlock(WeatheringCopper.WeatherState weatherState, Properties properties) {
-        super(properties);
+    public WeatheringCopperRotatedSlabBlock(WeatheringCopper.WeatherState weatherState, Block block) {
+        super(block);
         this.weatherState = weatherState;
     }
 

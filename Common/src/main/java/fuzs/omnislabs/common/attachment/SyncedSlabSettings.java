@@ -5,6 +5,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import fuzs.omnislabs.common.config.SlabActionType;
 import fuzs.omnislabs.common.init.ModRegistry;
 import fuzs.omnislabs.common.world.level.block.RotatedSlabBlock;
+import fuzs.puzzleslib.api.network.v3.codec.ExtraStreamCodecs;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -26,7 +27,7 @@ public record SyncedSlabSettings(Vec3 hitVector, SlabActionType precisePlacement
                     .forGetter(SyncedSlabSettings::precisePlacement),
             SlabActionType.CODEC.optionalFieldOf("precise_destruction", SlabActionType.NEVER)
                     .forGetter(SyncedSlabSettings::preciseDestruction)).apply(instance, SyncedSlabSettings::new));
-    public static final StreamCodec<ByteBuf, SyncedSlabSettings> STREAM_CODEC = StreamCodec.composite(Vec3.STREAM_CODEC,
+    public static final StreamCodec<ByteBuf, SyncedSlabSettings> STREAM_CODEC = StreamCodec.composite(ExtraStreamCodecs.VEC3,
             SyncedSlabSettings::hitVector,
             SlabActionType.STREAM_CODEC,
             SyncedSlabSettings::precisePlacement,

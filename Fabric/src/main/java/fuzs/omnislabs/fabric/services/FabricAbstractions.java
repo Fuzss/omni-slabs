@@ -5,16 +5,15 @@ import fuzs.omnislabs.common.world.level.block.RotatedSlabBlock;
 import fuzs.omnislabs.common.world.level.block.WeatheringCopperRotatedSlabBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.WeatheringCopper;
-import net.minecraft.world.level.block.state.BlockBehaviour;
 
 public final class FabricAbstractions implements CommonAbstractions {
     @Override
-    public Block createSlabBlock(BlockBehaviour.Properties properties) {
-        return new RotatedSlabBlock(properties);
+    public Block createSimpleSlabBlock(Block block) {
+        return new RotatedSlabBlock(block);
     }
 
     @Override
-    public Block createWeatheringCopperSlabBlock(WeatheringCopper.WeatherState weatherState, BlockBehaviour.Properties properties) {
-        return new WeatheringCopperRotatedSlabBlock(weatherState, properties);
+    public Block createWeatheringCopperSlabBlock(WeatheringCopper.WeatherState weatherState, Block block) {
+        return new WeatheringCopperRotatedSlabBlock(weatherState, block);
     }
 }

@@ -2,20 +2,14 @@ package fuzs.omnislabs.common.client.renderer.block.model;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import fuzs.puzzleslib.api.client.renderer.v1.model.MutableBakedQuad;
-import net.minecraft.client.model.geom.builders.UVPair;
-import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
-import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
-import net.minecraft.client.resources.model.ModelBaker;
-import net.minecraft.client.resources.model.SimpleModelWrapper;
-import net.minecraft.client.resources.model.cuboid.CuboidFace;
-import net.minecraft.client.resources.model.geometry.BakedQuad;
-import net.minecraft.client.resources.model.geometry.QuadCollection;
-import net.minecraft.client.resources.model.sprite.Material;
-import net.minecraft.core.Direction;
-import net.minecraft.util.RandomSource;
+import fuzs.puzzleslib.api.client.renderer.v1.model.QuadUtils;
 import net.minecraft.Util;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.model.*;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
@@ -23,9 +17,7 @@ import org.joml.Vector3fc;
 import java.util.*;
 import java.util.function.Function;
 
-public record SlabBlockStateModel(BlockStateModel.UnbakedRoot model,
-                                  Direction.Axis axis,
-                                  SlabType slabType) implements BlockStateModel.UnbakedRoot {
+public record SlabBlockStateModel(UnbakedModel model, Direction.Axis axis, SlabType slabType) implements UnbakedModel {
     private static final Collection<Direction> VALID_QUAD_FACES = Util.make(new ArrayList<>(Arrays.asList(Direction.values())),
             (List<Direction> list) -> {
                 list.add(null);
@@ -46,37 +38,15 @@ public record SlabBlockStateModel(BlockStateModel.UnbakedRoot model,
             new Vector3f(Float.MIN_VALUE, Float.MIN_VALUE, 0.5F)));
 
     @Override
-    public BlockStateModel bake(BlockState blockState, ModelBaker modelBaker) {
-        Function<BlockStateModelPart, BlockStateModelPart> blockModelPartFunction = Util.memoize((BlockStateModelPart blockModelPart) -> {
+    public BakedModel bake(ModelBaker baker, Function<Material, TextureAtlasSprite> spriteGetter, ModelState state) {
+        Function<BakedModel, BakedModel> blockModelPartFunction = Util.memoize((BakedModel blockModelPart) -> {
             QuadCollection quadCollection = rebakeQuads(blockModelPart, this.axis, this.slabType);
-            return new SimpleModelWrapper(quadCollection,
-                    blockModelPart.useAmbientOcclusion(),
-                    blockModelPart.particleMaterial());
+            return new BakedModelWrapper(blockModelPart, quadCollection);
         });
-        BlockStateModel blockStateModel = this.model.bake(blockState, modelBaker);
-        return new BlockStateModel() {
-            @Override
-            public void collectParts(RandomSource randomSource, List<BlockStateModelPart> output) {
-                List<BlockStateModelPart> tmpList = new ArrayList<>();
-                blockStateModel.collectParts(randomSource, tmpList);
-                for (BlockStateModelPart blockModelPart : tmpList) {
-                    output.add(blockModelPartFunction.apply(blockModelPart));
-                }
-            }
-
-            @Override
-            public Material.Baked particleMaterial() {
-                return blockStateModel.particleMaterial();
-            }
-
-            @Override
-            public @BakedQuad.MaterialFlags int materialFlags() {
-                return blockStateModel.materialFlags();
-            }
-        };
+        return blockModelPartFunction.apply(this.model.bake(baker, spriteGetter, state));
     }
 
-    private static QuadCollection rebakeQuads(BlockStateModelPart blockModelPart, Direction.Axis axis, SlabType slabType) {
+    private static QuadCollection rebakeQuads(BakedModel blockModelPart, Direction.Axis axis, SlabType slabType) {
         return switch (slabType) {
             case BOTTOM -> rebakeQuads(blockModelPart, MIN_AXIS_VECTORS, axis, slabType);
             case TOP -> rebakeQuads(blockModelPart, MAX_AXIS_VECTORS, axis, slabType);
@@ -84,16 +54,18 @@ public record SlabBlockStateModel(BlockStateModel.UnbakedRoot model,
         };
     }
 
-    private static QuadCollection rebakeQuads(BlockStateModelPart blockModelPart, Map<Direction.Axis, Vector3fc> axisVectors, Direction.Axis axis, SlabType slabType) {
+    private static QuadCollection rebakeQuads(BakedModel blockModelPart, Map<Direction.Axis, Vector3fc> axisVectors, Direction.Axis axis, SlabType slabType) {
         QuadCollection.Builder builder = new QuadCollection.Builder();
         for (Direction direction : VALID_QUAD_FACES) {
-            List<BakedQuad> bakedQuads = blockModelPart.getQuads(direction);
+            List<BakedQuad> bakedQuads = blockModelPart.getQuads(null, direction, RandomSource.create());
             for (BakedQuad bakedQuad : bakedQuads) {
                 MutableBakedQuad mutable = MutableBakedQuad.toMutable(bakedQuad);
                 rebakeQuadPositions(mutable, axisVectors, axis, slabType);
                 rebakeQuadUVs(mutable, slabType, axis, direction);
-                if (direction != null && (slabType == SlabType.DOUBLE || direction != (slabType == SlabType.BOTTOM ?
-                        axis.getPositive() : axis.getNegative()))) {
+                if (direction != null && (slabType == SlabType.DOUBLE || direction != Direction.fromAxisAndDirection(
+                        axis,
+                        slabType == SlabType.BOTTOM ? Direction.AxisDirection.POSITIVE :
+                                Direction.AxisDirection.NEGATIVE))) {
                     builder.addCulledFace(direction, mutable.toImmutable());
                 } else {
                     builder.addUnculledFace(mutable.toImmutable());
@@ -106,7 +78,7 @@ public record SlabBlockStateModel(BlockStateModel.UnbakedRoot model,
 
     private static void rebakeQuadPositions(MutableBakedQuad bakedQuad, Map<Direction.Axis, Vector3fc> axisVectors, Direction.Axis axis, SlabType slabType) {
         Vector3fc vector3fc = axisVectors.get(axis);
-        for (int i = 0; i < BakedQuad.VERTEX_COUNT; i++) {
+        for (int i = 0; i < QuadUtils.VERTEX_STRIDE; i++) {
             if (slabType == SlabType.BOTTOM) {
                 bakedQuad.position(i, bakedQuad.position(i).min(vector3fc, new Vector3f()));
             } else if (slabType == SlabType.TOP) {
@@ -126,7 +98,7 @@ public record SlabBlockStateModel(BlockStateModel.UnbakedRoot model,
                     UVPair.unpackU(maxUV),
                     UVPair.unpackV(maxUV));
             CuboidFace.UVs newUvs = computeSlabUVs(uvs, slabType, axis, direction);
-            for (int i = 0; i < BakedQuad.VERTEX_COUNT; i++) {
+            for (int i = 0; i < QuadUtils.VERTEX_STRIDE; i++) {
                 bakedQuad.packedUV(i, UVPair.pack(newUvs.getVertexU(i), newUvs.getVertexV(i)));
             }
         }
@@ -166,12 +138,12 @@ public record SlabBlockStateModel(BlockStateModel.UnbakedRoot model,
     }
 
     @Override
-    public Object visualEqualityGroup(BlockState blockState) {
-        return this.model.visualEqualityGroup(blockState);
+    public void resolveParents(Function<ResourceLocation, UnbakedModel> resolver) {
+        this.model.resolveParents(resolver);
     }
 
     @Override
-    public void resolveDependencies(Resolver resolver) {
-        this.model.resolveDependencies(resolver);
+    public Collection<ResourceLocation> getDependencies() {
+        return this.model.getDependencies();
     }
 }

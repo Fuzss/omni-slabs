@@ -13,6 +13,5 @@ multiloader {
             "ClientLevelMixin",
             "MultiPlayerGameModeMixin"
         )
-        clientAccessor("BlockBreakingRenderStateAccessor")
     }
 }

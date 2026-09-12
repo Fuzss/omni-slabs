@@ -4,20 +4,19 @@ import fuzs.puzzleslib.api.core.v1.ServiceProviderHelper;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.WeatheringCopperSlabBlock;
-import net.minecraft.world.level.block.state.BlockBehaviour;
 
 public interface CommonAbstractions {
     CommonAbstractions INSTANCE = ServiceProviderHelper.load(CommonAbstractions.class);
 
-    default Block createSlabBlock(Block block, BlockBehaviour.Properties properties) {
+    default Block createSlabBlock(Block block) {
         if (block instanceof WeatheringCopperSlabBlock slabBlock) {
-            return this.createWeatheringCopperSlabBlock(slabBlock.getAge(), properties);
+            return this.createWeatheringCopperSlabBlock(slabBlock.getAge(), block);
         } else {
-            return this.createSlabBlock(properties);
+            return this.createSimpleSlabBlock(block);
         }
     }
 
-    Block createSlabBlock(BlockBehaviour.Properties properties);
+    Block createSimpleSlabBlock(Block block);
 
-    Block createWeatheringCopperSlabBlock(WeatheringCopper.WeatherState weatherState, BlockBehaviour.Properties properties);
+    Block createWeatheringCopperSlabBlock(WeatheringCopper.WeatherState weatherState, Block block);
 }

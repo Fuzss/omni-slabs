@@ -14,9 +14,8 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.server.ReloadableServerResources;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -27,7 +26,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.gameevent.GameEvent;
@@ -43,13 +41,13 @@ public class BlockConversionHandler {
             .weakValues()
             .makeMap();
 
-    public static RegistryEntryAddedCallback<Block> onRegistryEntryAdded(Predicate<Block> filter, BiFunction<Block, BlockBehaviour.Properties, Block> factory, String modId) {
+    public static RegistryEntryAddedCallback<Block> onRegistryEntryAdded(Predicate<Block> filter, UnaryOperator<Block> factory, String modId) {
         return (Registry<Block> registry, ResourceLocation id, Block block, BiConsumer<ResourceLocation, Supplier<Block>> registrar) -> {
             if (filter.test(block)) {
-                ResourceLocation identifier = ResourceLocation.fromNamespaceAndPath(modId, id.getNamespace() + "/" + id.getPath());
-                registrar.accept(identifier, () -> {
-                    BlockBehaviour.Properties properties = BlockConversionHelper.copyBlockProperties(block, identifier);
-                    Block newBlock = factory.apply(block, properties);
+                ResourceLocation updatedId = ResourceLocation.fromNamespaceAndPath(modId,
+                        id.getNamespace() + "/" + id.getPath());
+                registrar.accept(updatedId, () -> {
+                    Block newBlock = factory.apply(block);
                     BLOCK_CONVERSIONS.put(block, newBlock);
                     return newBlock;
                 });
@@ -106,28 +104,18 @@ public class BlockConversionHandler {
         };
     }
 
-    public static Consumer<RegistryAccess> onClientTagsUpdated(TagKey<Block> unalteredBlocks, Predicate<Block> filter) {
+    public static Consumer<RegistryAccess> onTagsUpdated(TagKey<Block> unalteredBlocks, Predicate<Block> filter) {
         return (RegistryAccess registries) -> {
-            onTagsUpdated(unalteredBlocks, filter);
-        };
-    }
-
-    public static BiConsumer<ReloadableServerResources, RegistryAccess> onServerResourcesLoad(TagKey<Block> unalteredBlocks, Predicate<Block> filter) {
-        return (ReloadableServerResources serverResources, RegistryAccess registries) -> {
-            onTagsUpdated(unalteredBlocks, filter);
-        };
-    }
-
-    private static void onTagsUpdated(TagKey<Block> unalteredBlocks, Predicate<Block> filter) {
-        for (Map.Entry<ResourceKey<Item>, Item> entry : BuiltInRegistries.ITEM.entrySet()) {
-            if (entry.getValue() instanceof BlockItem blockItem) {
-                Block block = blockItem.getBlock();
-                setItemForBlock(filter, blockItem, block);
-                setBlockForItem(unalteredBlocks, blockItem, block);
+            for (Map.Entry<ResourceKey<Item>, Item> entry : BuiltInRegistries.ITEM.entrySet()) {
+                if (entry.getValue() instanceof BlockItem blockItem) {
+                    Block block = blockItem.getBlock();
+                    setItemForBlock(filter, blockItem, block);
+                    setBlockForItem(unalteredBlocks, blockItem, block);
+                }
             }
-        }
 
-        BLOCK_CONVERSIONS.forEach(BlockConversionHelper::copyBoundTags);
+            BLOCK_CONVERSIONS.forEach(BlockConversionHelper::copyBoundTags);
+        };
     }
 
     private static void setItemForBlock(Predicate<Block> filter, BlockItem blockItem, Block block) {
@@ -191,8 +179,8 @@ public class BlockConversionHandler {
     }
 
     private static <T extends Comparable<T>, V extends T> BlockState copyAllProperties(BlockState oldBlockState, BlockState newBlockState) {
-        for (Property.Value<?> value : oldBlockState.getValues().toList()) {
-            newBlockState = newBlockState.trySetValue((Property<T>) value.property(), (V) value.value());
+        for (Map.Entry<Property<?>, Comparable<?>> entry : oldBlockState.getValues().entrySet()) {
+            newBlockState = newBlockState.trySetValue((Property<T>) entry.getKey(), (V) entry.getValue());
         }
 
         return newBlockState;

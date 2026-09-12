@@ -11,13 +11,13 @@ import fuzs.puzzleslib.api.client.core.v1.ClientModConstructor;
 import fuzs.puzzleslib.api.client.core.v1.context.BlockStateResolverContext;
 import fuzs.puzzleslib.api.client.event.v1.ClientTagsUpdatedCallback;
 import fuzs.puzzleslib.api.client.event.v1.entity.player.ClientPlayerNetworkEvents;
-import fuzs.puzzleslib.api.client.event.v1.renderer.ExtractBlockOutlineCallback;
+import fuzs.puzzleslib.api.client.event.v1.renderer.RenderHighlightCallback;
 import fuzs.puzzleslib.api.client.renderer.v1.model.ModelLoadingHelper;
 import fuzs.puzzleslib.api.core.v1.context.PackRepositorySourcesContext;
 import fuzs.puzzleslib.api.event.v1.core.EventPhase;
 import fuzs.puzzleslib.api.event.v1.entity.player.PlayerInteractEvents;
-import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 import net.minecraft.client.resources.model.BlockStateModelLoader;
+import net.minecraft.client.resources.model.UnbakedModel;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -28,6 +28,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.SlabType;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -43,11 +44,11 @@ public class OmniSlabsClient implements ClientModConstructor {
 
     private static void registerEventHandlers() {
         ClientTagsUpdatedCallback.EVENT.register(EventPhase.FIRST,
-                BlockConversionHandler.onClientTagsUpdated(ModRegistry.UNALTERED_SLABS_BLOCK_TAG,
+                BlockConversionHandler.onTagsUpdated(ModRegistry.UNALTERED_SLABS_BLOCK_TAG,
                         OmniSlabs.BLOCK_PREDICATE)::accept);
-        ExtractBlockOutlineCallback.EVENT.register(SlabOutlineHandler::onExtractBlockOutline);
+        RenderHighlightCallback.EVENT.register(SlabOutlineHandler::onRenderHighlight);
         PlayerInteractEvents.ATTACK_BLOCK.register(EventPhase.BEFORE, BlockDestroyingHandler::onAttackBlock);
-        ClientPlayerNetworkEvents.JOIN.register(BlockDestroyingHandler::onPlayerJoin);
+        ClientPlayerNetworkEvents.LOGGED_IN.register(BlockDestroyingHandler::onPlayerJoin);
     }
 
     @Override
@@ -63,10 +64,10 @@ public class OmniSlabsClient implements ClientModConstructor {
                                             executor);
                                 });
                     },
-                    (BlockStateModelLoader.LoadedModels loadedModels, BiConsumer<BlockState, BlockStateModel.UnbakedRoot> blockStateConsumer) -> {
+                    (Map<BlockState, UnbakedModel> loadedModels, BiConsumer<BlockState, UnbakedModel> blockStateConsumer) -> {
                         for (BlockState blockState : newBlock.getStateDefinition().getPossibleStates()) {
                             Direction.Axis axis = blockState.getValue(RotatedSlabBlock.AXIS);
-                            boolean hasBlockModel = loadedModels.models().containsKey(blockState);
+                            boolean hasBlockModel = loadedModels.containsKey(blockState);
                             boolean keepVanillaModel = axis == Direction.Axis.Y;
                             BlockState oldBlockState;
                             if (hasBlockModel) {
@@ -78,7 +79,7 @@ public class OmniSlabsClient implements ClientModConstructor {
                                         .setValue(RotatedSlabBlock.TYPE, SlabType.DOUBLE);
                             }
 
-                            BlockStateModel.UnbakedRoot model = loadedModels.models().get(oldBlockState);
+                            UnbakedModel model = loadedModels.get(oldBlockState);
                             if (model != null) {
                                 if (hasBlockModel || keepVanillaModel) {
                                     blockStateConsumer.accept(blockState, model);
