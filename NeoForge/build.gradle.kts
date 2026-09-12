@@ -8,8 +8,6 @@ dependencies {
 
 multiloader {
     mixins {
-        clientMixin(
-            "ClientLevelNeoForgeMixin"
-        )
+        clientMixin("LevelRendererNeoForgeMixin")
     }
 }
