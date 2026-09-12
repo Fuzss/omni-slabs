@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/slab",
-  "textures": {
-    "bottom": "minecraft:block/polished_cinnabar",
-    "side": "omnislabs:block/minecraft/polished_cinnabar_slab_side",
-    "top": "minecraft:block/polished_cinnabar"
-  }
-}
