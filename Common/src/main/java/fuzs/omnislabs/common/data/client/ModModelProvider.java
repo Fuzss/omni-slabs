@@ -67,6 +67,9 @@ public class ModModelProvider extends AbstractModelProvider {
         this.createOmniSlab(block, textureMapping, ModelTemplates.CUBE_BOTTOM_TOP, blockModelGenerators);
     }
 
+    /**
+     * @see BlockModelGenerators#createSmoothStoneSlab()
+     */
     public final void createOmniSlab(Block block, TextureMapping textureMapping, ModelTemplate modelTemplate, BlockModelGenerators blockModelGenerators) {
         MultiVariant bottomVariant = BlockModelGenerators.plainVariant(ModelTemplates.SLAB_BOTTOM.createWithOverride(
                 block,
@@ -84,6 +87,9 @@ public class ModModelProvider extends AbstractModelProvider {
         blockModelGenerators.blockStateOutput.accept(createSlab(block, bottomVariant, topVariant, doubleVariant));
     }
 
+    /**
+     * @see BlockModelGenerators#createSlab(Block, MultiVariant, MultiVariant, MultiVariant)
+     */
     public static BlockModelDefinitionGenerator createSlab(Block block, MultiVariant bottomVariant, MultiVariant topVariant, MultiVariant doubleVariant) {
         return MultiVariantGenerator.dispatch(block)
                 .with(PropertyDispatch.initial(BlockStateProperties.SLAB_TYPE, BlockStateProperties.AXIS)
