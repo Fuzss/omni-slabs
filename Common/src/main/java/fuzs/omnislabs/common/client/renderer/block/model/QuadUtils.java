@@ -14,37 +14,44 @@ import org.joml.Vector3f;
 @Deprecated
 public final class QuadUtils {
     /**
+     * Number of vertex indices.
+     */
+    public static final int VERTEX_COUNT = 4;
+    /**
      * Count of components in a vertex.
      */
-    public static final int VERTEX_STRIDE = DefaultVertexFormat.BLOCK.getVertexSize() / 4;
+    public static final int VERTEX_STRIDE = DefaultVertexFormat.BLOCK.getVertexSize() / VERTEX_COUNT;
     /**
      * Start index for position components.
      */
-    public static final int VERTEX_POSITION = DefaultVertexFormat.BLOCK.getOffset(VertexFormatElement.POSITION) / 4;
+    public static final int VERTEX_POSITION =
+            DefaultVertexFormat.BLOCK.getOffset(VertexFormatElement.POSITION) / VERTEX_COUNT;
     /**
      * Start index for color components.
      */
-    public static final int VERTEX_COLOR = DefaultVertexFormat.BLOCK.getOffset(VertexFormatElement.COLOR) / 4;
+    public static final int VERTEX_COLOR =
+            DefaultVertexFormat.BLOCK.getOffset(VertexFormatElement.COLOR) / VERTEX_COUNT;
     /**
      * Start index for uv components.
      */
-    public static final int VERTEX_UV = DefaultVertexFormat.BLOCK.getOffset(VertexFormatElement.UV) / 4;
+    public static final int VERTEX_UV = DefaultVertexFormat.BLOCK.getOffset(VertexFormatElement.UV) / VERTEX_COUNT;
     /**
      * Start index for uv components.
      */
-    public static final int VERTEX_UV0 = DefaultVertexFormat.BLOCK.getOffset(VertexFormatElement.UV0) / 4;
+    public static final int VERTEX_UV0 = DefaultVertexFormat.BLOCK.getOffset(VertexFormatElement.UV0) / VERTEX_COUNT;
     /**
      * Start index for uv components.
      */
-    public static final int VERTEX_UV1 = DefaultVertexFormat.BLOCK.getOffset(VertexFormatElement.UV1) / 4;
+    public static final int VERTEX_UV1 = DefaultVertexFormat.BLOCK.getOffset(VertexFormatElement.UV1) / VERTEX_COUNT;
     /**
      * Start index for uv components.
      */
-    public static final int VERTEX_UV2 = DefaultVertexFormat.BLOCK.getOffset(VertexFormatElement.UV2) / 4;
+    public static final int VERTEX_UV2 = DefaultVertexFormat.BLOCK.getOffset(VertexFormatElement.UV2) / VERTEX_COUNT;
     /**
      * Start index for normal components.
      */
-    public static final int VERTEX_NORMAL = DefaultVertexFormat.BLOCK.getOffset(VertexFormatElement.NORMAL) / 4;
+    public static final int VERTEX_NORMAL =
+            DefaultVertexFormat.BLOCK.getOffset(VertexFormatElement.NORMAL) / VERTEX_COUNT;
 
     private QuadUtils() {
         // NO-OP
@@ -116,9 +123,8 @@ public final class QuadUtils {
      * @return the x-normal component for the vertex
      */
     public static float getNormalX(BakedQuad bakedQuad, int vertexIndex) {
-        int offset = vertexIndex * VERTEX_STRIDE + VERTEX_NORMAL;
-        int normal = bakedQuad.getVertices()[offset];
-        return ((byte) (normal & 0xFF)) / 127.0F;
+        int packedNormal = getPackedNormal(bakedQuad, vertexIndex);
+        return ((byte) (packedNormal & 0xFF)) / 127.0F;
     }
 
     /**
@@ -127,9 +133,8 @@ public final class QuadUtils {
      * @return the y-normal component for the vertex
      */
     public static float getNormalY(BakedQuad bakedQuad, int vertexIndex) {
-        int offset = vertexIndex * VERTEX_STRIDE + VERTEX_NORMAL;
-        int normal = bakedQuad.getVertices()[offset];
-        return ((byte) ((normal >> 8) & 0xFF)) / 127.0F;
+        int packedNormal = getPackedNormal(bakedQuad, vertexIndex);
+        return ((byte) ((packedNormal >> 8) & 0xFF)) / 127.0F;
     }
 
     /**
@@ -138,9 +143,18 @@ public final class QuadUtils {
      * @return the z-normal component for the vertex
      */
     public static float getNormalZ(BakedQuad bakedQuad, int vertexIndex) {
+        int packedNormal = getPackedNormal(bakedQuad, vertexIndex);
+        return ((byte) ((packedNormal >> 16) & 0xFF)) / 127.0F;
+    }
+
+    /**
+     * @param bakedQuad   the baked quad
+     * @param vertexIndex the vertex index
+     * @return the packed normal for the vertex
+     */
+    public static int getPackedNormal(BakedQuad bakedQuad, int vertexIndex) {
         int offset = vertexIndex * VERTEX_STRIDE + VERTEX_NORMAL;
-        int normal = bakedQuad.getVertices()[offset];
-        return ((byte) ((normal >> 16) & 0xFF)) / 127.0F;
+        return bakedQuad.getVertices()[offset];
     }
 
     /**
@@ -159,6 +173,28 @@ public final class QuadUtils {
      */
     public static Vector2f getUv(BakedQuad bakedQuad, int vertexIndex) {
         return new Vector2f(getU(bakedQuad, vertexIndex), getV(bakedQuad, vertexIndex));
+    }
+
+    /**
+     * @param bakedQuad   the baked quad
+     * @param vertexIndex the vertex index
+     * @return the uv vector for the vertex
+     */
+    public static long getPackedUv(BakedQuad bakedQuad, int vertexIndex) {
+        return packUv(getU(bakedQuad, vertexIndex), getV(bakedQuad, vertexIndex));
+    }
+
+    /**
+     * Copied from Minecraft 26.2.
+     *
+     * @param u the u-component
+     * @param v the v-component
+     * @return the packed uv
+     */
+    public static long packUv(float u, float v) {
+        long high = Float.floatToIntBits(u) & 4294967295L;
+        long low = Float.floatToIntBits(v) & 4294967295L;
+        return high << 32 | low;
     }
 
     /**
@@ -249,8 +285,8 @@ public final class QuadUtils {
      */
     public static void setNormal(BakedQuad bakedQuad, int vertexIndex, float x, float y, float z) {
         int packedNormal =
-                ((int) (x * 127.0f) & 0xFF) | (((int) (y * 127.0f) & 0xFF) << 8) | (((int) (z * 127.0f) & 0xFF) << 16);
-        setNormal(bakedQuad, vertexIndex, packedNormal);
+                ((int) (x * 127.0F) & 0xFF) | (((int) (y * 127.0F) & 0xFF) << 8) | (((int) (z * 127.0F) & 0xFF) << 16);
+        setPackedNormal(bakedQuad, vertexIndex, packedNormal);
     }
 
     /**
@@ -260,7 +296,7 @@ public final class QuadUtils {
      * @param y           the y-normal component
      * @param z           the z-normal component
      */
-    public static void setNormal(BakedQuad bakedQuad, int vertexIndex, int packedNormal) {
+    public static void setPackedNormal(BakedQuad bakedQuad, int vertexIndex, int packedNormal) {
         int offset = vertexIndex * VERTEX_STRIDE + VERTEX_NORMAL;
         bakedQuad.getVertices()[offset] = packedNormal;
     }
@@ -275,7 +311,7 @@ public final class QuadUtils {
      */
     public static void setColor(BakedQuad bakedQuad, int vertexIndex, int red, int green, int blue, int alpha) {
         int packedColor = ((alpha & 0xFF) << 24) | ((blue & 0xFF) << 16) | ((green & 0xFF) << 8) | (red & 0xFF);
-        setColor(bakedQuad, vertexIndex, packedColor);
+        setPackedColor(bakedQuad, vertexIndex, packedColor);
     }
 
     /**
@@ -283,7 +319,7 @@ public final class QuadUtils {
      * @param vertexIndex the vertex index
      * @param packedColor the packed color
      */
-    public static void setColor(BakedQuad bakedQuad, int vertexIndex, int packedColor) {
+    public static void setPackedColor(BakedQuad bakedQuad, int vertexIndex, int packedColor) {
         int offset = vertexIndex * VERTEX_STRIDE + VERTEX_COLOR;
         bakedQuad.getVertices()[offset] = packedColor;
     }
@@ -306,6 +342,37 @@ public final class QuadUtils {
     public static void setUv(BakedQuad bakedQuad, int vertexIndex, float u, float v) {
         setU(bakedQuad, vertexIndex, u);
         setV(bakedQuad, vertexIndex, v);
+    }
+
+    /**
+     * @param bakedQuad   the baked quad
+     * @param vertexIndex the vertex index
+     * @param packedUV    the packed uv
+     */
+    public static void setPackedUv(BakedQuad bakedQuad, int vertexIndex, long packedUV) {
+        setU(bakedQuad, vertexIndex, unpackU(packedUV));
+        setV(bakedQuad, vertexIndex, unpackV(packedUV));
+    }
+
+    /**
+     * Copied from Minecraft 26.2.
+     *
+     * @param packedUV the packed uv
+     * @return the u-component
+     */
+    public static float unpackU(long packedUV) {
+        int bits = (int) (packedUV >> 32);
+        return Float.intBitsToFloat(bits);
+    }
+
+    /**
+     * Copied from Minecraft 26.2.
+     *
+     * @param packedUV the packed uv
+     * @return the v-component
+     */
+    public static float unpackV(long packedUV) {
+        return Float.intBitsToFloat((int) packedUV);
     }
 
     /**
@@ -343,7 +410,7 @@ public final class QuadUtils {
         v2.sub(v0);
         v2.cross(v3);
         v2.normalize();
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < VERTEX_COUNT; i++) {
             setNormal(bakedQuad, i, v2);
         }
     }

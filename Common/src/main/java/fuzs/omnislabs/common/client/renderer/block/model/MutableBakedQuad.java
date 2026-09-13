@@ -14,7 +14,6 @@ public class MutableBakedQuad {
     private TextureAtlasSprite sprite;
     private int tintIndex;
     private boolean shade;
-    private boolean copyAllProperties;
     private boolean computeQuadNormals;
 
     public MutableBakedQuad(BakedQuad bakedQuad) {
@@ -26,7 +25,7 @@ public class MutableBakedQuad {
     }
 
     public static MutableBakedQuad toMutable(BakedQuad bakedQuad) {
-        return new MutableBakedQuad(bakedQuad);
+        return new MutableBakedQuad(fuzs.puzzleslib.api.client.renderer.v1.model.QuadUtils.copy(bakedQuad));
     }
 
     public Vector3fc position0() {
@@ -66,9 +65,7 @@ public class MutableBakedQuad {
     }
 
     public long packedUV(int vertexIndex) {
-        float u = QuadUtils.getU(this.bakedQuad, vertexIndex);
-        float v = QuadUtils.getV(this.bakedQuad, vertexIndex);
-        return UVPair.pack(u, v);
+        return QuadUtils.getPackedUv(this.bakedQuad, vertexIndex);
     }
 
     public Direction direction() {
@@ -125,33 +122,26 @@ public class MutableBakedQuad {
     }
 
     public MutableBakedQuad packedUV(int vertexIndex, long packedUV) {
-        float u = UVPair.unpackU(packedUV);
-        QuadUtils.setU(this.bakedQuad, vertexIndex, u);
-        float v = UVPair.unpackV(packedUV);
-        QuadUtils.setV(this.bakedQuad, vertexIndex, v);
+        QuadUtils.setPackedUv(this.bakedQuad, vertexIndex, packedUV);
         return this;
     }
 
     public MutableBakedQuad direction(Direction direction) {
-        this.copyAllProperties = true;
         this.direction = direction;
         return this;
     }
 
     public MutableBakedQuad sprite(TextureAtlasSprite sprite) {
-        this.copyAllProperties = true;
         this.sprite = sprite;
         return this;
     }
 
     public MutableBakedQuad tintIndex(int tintIndex) {
-        this.copyAllProperties = true;
         this.tintIndex = tintIndex;
         return this;
     }
 
     public MutableBakedQuad shade(boolean shade) {
-        this.copyAllProperties = true;
         this.shade = shade;
         return this;
     }
@@ -173,7 +163,7 @@ public class MutableBakedQuad {
     }
 
     public MutableBakedQuad packedNormal(int vertexIndex, int packedNormal) {
-        QuadUtils.setNormal(this.bakedQuad, vertexIndex, packedNormal);
+        QuadUtils.setPackedNormal(this.bakedQuad, vertexIndex, packedNormal);
         return this;
     }
 
@@ -206,7 +196,7 @@ public class MutableBakedQuad {
     }
 
     public MutableBakedQuad packedColor(int vertexIndex, int packedColor) {
-        QuadUtils.setColor(this.bakedQuad, vertexIndex, packedColor);
+        QuadUtils.setPackedColor(this.bakedQuad, vertexIndex, packedColor);
         return this;
     }
 
@@ -218,7 +208,8 @@ public class MutableBakedQuad {
     }
 
     public BakedQuad toImmutable() {
-        BakedQuad bakedQuad = this.copyAllProperties ? this.copyBakedQuad(this.bakedQuad) : this.bakedQuad;
+        // Always copy the quad effectively, so later calls to the mutable implementation don't end up changing it.
+        BakedQuad bakedQuad = this.copyBakedQuad(this.bakedQuad);
         if (this.computeQuadNormals) {
             QuadUtils.fillNormal(bakedQuad);
         }

@@ -2,7 +2,6 @@ package fuzs.omnislabs.common.client.renderer.block.model;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import fuzs.puzzleslib.api.client.renderer.v1.model.QuadUtils;
 import net.minecraft.Util;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -78,7 +77,7 @@ public record SlabBlockStateModel(UnbakedModel model, Direction.Axis axis, SlabT
 
     private static void rebakeQuadPositions(MutableBakedQuad bakedQuad, Map<Direction.Axis, Vector3fc> axisVectors, Direction.Axis axis, SlabType slabType) {
         Vector3fc vector3fc = axisVectors.get(axis);
-        for (int i = 0; i < QuadUtils.VERTEX_STRIDE; i++) {
+        for (int i = 0; i < QuadUtils.VERTEX_COUNT; i++) {
             if (slabType == SlabType.BOTTOM) {
                 bakedQuad.position(i, bakedQuad.position(i).min(vector3fc, new Vector3f()));
             } else if (slabType == SlabType.TOP) {
@@ -93,30 +92,30 @@ public record SlabBlockStateModel(UnbakedModel model, Direction.Axis axis, SlabT
         if (direction != null && direction.getAxis() != axis) {
             long minUV = bakedQuad.packedUV0();
             long maxUV = bakedQuad.packedUV2();
-            CuboidFace.UVs uvs = new CuboidFace.UVs(UVPair.unpackU(minUV),
-                    UVPair.unpackV(minUV),
-                    UVPair.unpackU(maxUV),
-                    UVPair.unpackV(maxUV));
-            CuboidFace.UVs newUvs = computeSlabUVs(uvs, slabType, axis, direction);
-            for (int i = 0; i < QuadUtils.VERTEX_STRIDE; i++) {
-                bakedQuad.packedUV(i, UVPair.pack(newUvs.getVertexU(i), newUvs.getVertexV(i)));
+            UVs uvs = new UVs(QuadUtils.unpackU(minUV),
+                    QuadUtils.unpackV(minUV),
+                    QuadUtils.unpackU(maxUV),
+                    QuadUtils.unpackV(maxUV));
+            UVs newUvs = computeSlabUVs(uvs, slabType, axis, direction);
+            for (int i = 0; i < QuadUtils.VERTEX_COUNT; i++) {
+                bakedQuad.packedUV(i, QuadUtils.packUv(newUvs.getVertexU(i), newUvs.getVertexV(i)));
             }
         }
     }
 
-    private static CuboidFace.UVs computeSlabUVs(CuboidFace.UVs uvs, SlabType slabType, Direction.Axis axis, Direction direction) {
+    private static UVs computeSlabUVs(UVs uvs, SlabType slabType, Direction.Axis axis, Direction direction) {
         boolean isMirrored = isDirectionMirrored(direction, axis);
         boolean isMinUVMirrored = slabType == SlabType.TOP && !isMirrored || slabType == SlabType.BOTTOM && isMirrored;
         boolean isMaxUVMirrored = slabType == SlabType.BOTTOM && !isMirrored || slabType == SlabType.TOP && isMirrored;
         if (axis.isHorizontal() && (axis != Direction.Axis.Z || direction.getAxis() != Direction.Axis.Y)) {
             float textureWidth = (uvs.maxU() - uvs.minU()) / 2.0F;
-            return new CuboidFace.UVs(isMinUVMirrored ? uvs.minU() + textureWidth : uvs.minU(),
+            return new UVs(isMinUVMirrored ? uvs.minU() + textureWidth : uvs.minU(),
                     uvs.minV(),
                     isMaxUVMirrored ? uvs.maxU() - textureWidth : uvs.maxU(),
                     uvs.maxV());
         } else {
             float textureHeight = (uvs.maxV() - uvs.minV()) / 2.0F;
-            return new CuboidFace.UVs(uvs.minU(),
+            return new UVs(uvs.minU(),
                     isMinUVMirrored ? uvs.minV() + textureHeight : uvs.minV(),
                     uvs.maxU(),
                     isMaxUVMirrored ? uvs.maxV() - textureHeight : uvs.maxV());
@@ -145,5 +144,18 @@ public record SlabBlockStateModel(UnbakedModel model, Direction.Axis axis, SlabT
     @Override
     public Collection<ResourceLocation> getDependencies() {
         return this.model.getDependencies();
+    }
+
+    /**
+     * Copied from Minecraft 26.2.
+     */
+    private record UVs(float minU, float minV, float maxU, float maxV) {
+        public float getVertexU(int index) {
+            return index != 0 && index != 1 ? this.maxU : this.minU;
+        }
+
+        public float getVertexV(int index) {
+            return index != 0 && index != 3 ? this.maxV : this.minV;
+        }
     }
 }

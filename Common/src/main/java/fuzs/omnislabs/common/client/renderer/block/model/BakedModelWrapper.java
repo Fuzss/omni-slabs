@@ -12,6 +12,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
+/**
+ * TODO move this to each mod loader with specific implementations that are already available.
+ */
 public record BakedModelWrapper(BakedModel model, QuadCollection quadCollection) implements BakedModel {
     @Override
     public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction direction, RandomSource random) {

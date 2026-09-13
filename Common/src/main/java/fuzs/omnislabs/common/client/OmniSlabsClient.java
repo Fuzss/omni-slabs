@@ -9,6 +9,7 @@ import fuzs.omnislabs.common.init.ModRegistry;
 import fuzs.omnislabs.common.world.level.block.RotatedSlabBlock;
 import fuzs.puzzleslib.api.client.core.v1.ClientModConstructor;
 import fuzs.puzzleslib.api.client.core.v1.context.BlockStateResolverContext;
+import fuzs.puzzleslib.api.client.core.v1.context.RenderTypesContext;
 import fuzs.puzzleslib.api.client.event.v1.ClientTagsUpdatedCallback;
 import fuzs.puzzleslib.api.client.event.v1.entity.player.ClientPlayerNetworkEvents;
 import fuzs.puzzleslib.api.client.event.v1.renderer.RenderHighlightCallback;
@@ -99,6 +100,14 @@ public class OmniSlabsClient implements ClientModConstructor {
                         }
                     });
         });
+    }
+
+    @Override
+    public void onRegisterBlockRenderTypes(RenderTypesContext<Block> context) {
+        // this runs deferred by default, so we should have all entries from other mods available to us
+        for (Map.Entry<Block, Block> entry : BlockConversionHandler.getBlockConversions().entrySet()) {
+            context.registerRenderType(entry.getValue(), context.getRenderType(entry.getKey()));
+        }
     }
 
     @Override
