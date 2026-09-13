@@ -2,6 +2,10 @@ package fuzs.omnislabs.common.client.renderer.block.model;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import fuzs.omnislabs.common.services.ClientAbstractions;
+import fuzs.puzzleslib.api.client.renderer.v1.model.MutableBakedQuad;
+import fuzs.puzzleslib.api.client.renderer.v1.model.QuadCollection;
+import fuzs.puzzleslib.api.client.renderer.v1.model.QuadUtils;
 import net.minecraft.Util;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -40,7 +44,7 @@ public record SlabBlockStateModel(UnbakedModel model, Direction.Axis axis, SlabT
     public BakedModel bake(ModelBaker baker, Function<Material, TextureAtlasSprite> spriteGetter, ModelState state) {
         Function<BakedModel, BakedModel> blockModelPartFunction = Util.memoize((BakedModel blockModelPart) -> {
             QuadCollection quadCollection = rebakeQuads(blockModelPart, this.axis, this.slabType);
-            return new BakedModelWrapper(blockModelPart, quadCollection);
+            return ClientAbstractions.INSTANCE.createBakedModelWrapper(blockModelPart, quadCollection);
         });
         return blockModelPartFunction.apply(this.model.bake(baker, spriteGetter, state));
     }
