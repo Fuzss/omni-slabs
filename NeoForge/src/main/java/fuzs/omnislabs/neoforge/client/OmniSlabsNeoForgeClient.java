@@ -6,7 +6,7 @@ import fuzs.omnislabs.common.client.handler.BlockDestroyingHandler;
 import fuzs.omnislabs.common.data.client.ModModelProvider;
 import fuzs.omnislabs.common.mixin.client.accessor.BlockBreakingRenderStateAccessor;
 import fuzs.puzzleslib.common.api.client.core.v1.ClientModConstructor;
-import fuzs.puzzleslib.neoforge.api.data.v2.core.DataProviderHelper;
+import fuzs.puzzleslib.neoforge.api.data.v3.core.DataProviderBuilder;
 import net.minecraft.client.renderer.state.level.BlockBreakingRenderState;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -22,10 +22,9 @@ public class OmniSlabsNeoForgeClient {
     public OmniSlabsNeoForgeClient() {
         ClientModConstructor.construct(OmniSlabs.MOD_ID, OmniSlabsClient::new);
         registerEventHandlers(NeoForge.EVENT_BUS);
-        DataProviderHelper.registerDataProviders(OmniSlabs.MOD_ID, ModModelProvider::new);
-        DataProviderHelper.registerDataProviders(OmniSlabsClient.DISTINCT_SLABS_ID,
-                PackType.CLIENT_RESOURCES,
-                ModModelProvider.DistinctSlabs::new);
+        DataProviderBuilder.of(OmniSlabs.MOD_ID).addProvider(ModModelProvider::new);
+        DataProviderBuilder.ofBuiltIn(OmniSlabsClient.DISTINCT_SLABS_ID, PackType.CLIENT_RESOURCES)
+                .addProvider(ModModelProvider.DistinctSlabs::new);
     }
 
     private static void registerEventHandlers(IEventBus eventBus) {

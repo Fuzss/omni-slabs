@@ -13,7 +13,7 @@ import net.minecraft.world.level.block.Block;
 
 public class ModRegistry {
     public static final DataAttachmentType<Entity, SyncedSlabSettings> SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE = DataAttachmentRegistry.<SyncedSlabSettings>entityBuilder()
-            .defaultValue(EntityTypes.PLAYER, SyncedSlabSettings.EMPTY)
+            .defaultValue(EntityTypes.PLAYER.builtInRegistryHolder().key(), SyncedSlabSettings.EMPTY)
             .networkSynchronized(SyncedSlabSettings.STREAM_CODEC, PlayerSet::ofEntity)
             .build(OmniSlabs.id("synced_slab_settings"));
 

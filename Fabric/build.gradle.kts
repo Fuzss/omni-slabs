@@ -13,7 +13,7 @@ multiloader {
             "ServerPlayerGameModeFabricMixin"
         )
         clientMixin(
-            "ClientLevelFabricMixin", "MultiPlayerGameModeFabricMixin"
+            "MultiPlayerGameModeFabricMixin"
         )
     }
 }

@@ -1,15 +1,16 @@
 package fuzs.omnislabs.common.world.level.block;
 
-import com.mojang.serialization.MapCodec;
+import com.mojang.math.OctahedralGroup;
 import fuzs.omnislabs.common.OmniSlabs;
 import fuzs.omnislabs.common.attachment.SyncedSlabSettings;
 import fuzs.omnislabs.common.config.ServerConfig;
 import fuzs.omnislabs.common.handler.BlockConversionHandler;
 import fuzs.omnislabs.common.init.ModRegistry;
 import fuzs.omnislabs.common.util.SlabTypeHelper;
-import fuzs.puzzleslib.common.api.util.v1.ShapesHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -37,18 +38,14 @@ import java.util.Map;
  * @see RotatedPillarBlock
  */
 public class RotatedSlabBlock extends SlabBlock {
-    public static final MapCodec<RotatedSlabBlock> CODEC = simpleCodec(RotatedSlabBlock::new);
     public static final EnumProperty<Direction.Axis> AXIS = BlockStateProperties.AXIS;
-    private static final Map<Direction, VoxelShape> SHAPES = ShapesHelper.rotate(SlabBlock.SHAPE_TOP);
+    private static final Map<Direction, VoxelShape> SHAPES = Shapes.rotateAll(SlabBlock.SHAPE_TOP,
+            OctahedralGroup.BLOCK_ROT_X_90,
+            new Vec3(0.5, 0.5, 0.5));
 
     public RotatedSlabBlock(BlockBehaviour.Properties properties) {
         super(properties);
         this.registerDefaultState(this.defaultBlockState().setValue(AXIS, Direction.Axis.Y));
-    }
-
-    @Override
-    public MapCodec<? extends SlabBlock> codec() {
-        return CODEC;
     }
 
     @Override
@@ -147,7 +144,7 @@ public class RotatedSlabBlock extends SlabBlock {
      * super call which handles the drops.
      */
     @Override
-    public void playerDestroy(Level level, Player player, BlockPos blockPos, BlockState blockState, @Nullable BlockEntity blockEntity, ItemStack itemStack) {
+    public void playerDestroy(ServerLevel level, ServerPlayer player, BlockPos blockPos, BlockState blockState, @Nullable BlockEntity blockEntity, ItemStack itemStack) {
         BlockState originalBlockState = BlockConversionHandler.getBlockConversions()
                 .inverse()
                 .getOrDefault(blockState.getBlock(), blockState.getBlock())

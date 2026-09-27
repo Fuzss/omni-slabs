@@ -36,4 +36,10 @@ abstract class ClientLevelMixin extends Level {
         SlabType slabType = BlockDestroyingHandler.getSlabTypeAt(blockState, blockPos);
         return slabType != null ? blockState.setValue(RotatedSlabBlock.TYPE, slabType) : blockState;
     }
+
+    @ModifyVariable(method = "addBreakingBlockEffects", at = @At("STORE"))
+    public BlockState addBreakingBlockEffects(BlockState blockState, @Local(argsOnly = true) BlockPos blockPos) {
+        SlabType slabType = BlockDestroyingHandler.getSlabTypeAt(blockState, blockPos);
+        return slabType != null ? blockState.setValue(RotatedSlabBlock.TYPE, slabType) : blockState;
+    }
 }

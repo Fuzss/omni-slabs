@@ -5,11 +5,3 @@ plugins {
 dependencies {
     modApi(sharedLibs.puzzleslib.neoforge)
 }
-
-multiloader {
-    mixins {
-        clientMixin(
-            "ClientLevelNeoForgeMixin"
-        )
-    }
-}
