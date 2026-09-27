@@ -24,6 +24,7 @@ import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
@@ -31,10 +32,16 @@ import java.util.Objects;
 public class BlockDestroyingHandler {
     @Nullable
     private static BlockPos destroyBlockPos;
+    @Nullable
+    private static SlabType destroySlabType;
 
     public static EventResult onAttackBlock(Player player, Level level, InteractionHand interactionHand, BlockPos blockPos, Direction direction) {
         if (level.isClientSide()) {
-            MessageSender.broadcast(new ServerboundHitVectorMessage(Minecraft.getInstance().hitResult.getLocation()));
+            Minecraft minecraft = Minecraft.getInstance();
+            Vec3 hitVector = minecraft.hitResult.getLocation();
+            SyncedSlabSettings.setHitVector(player, hitVector);
+            MessageSender.broadcast(new ServerboundHitVectorMessage(hitVector));
+            destroyBlockPos = blockPos;
         }
 
         return EventResult.PASS;
@@ -42,8 +49,13 @@ public class BlockDestroyingHandler {
 
     public static void onStartDestroy(BlockPos blockPos) {
         Minecraft minecraft = Minecraft.getInstance();
-        SyncedSlabSettings.setHitVector(minecraft.player, minecraft.hitResult.getLocation());
         destroyBlockPos = blockPos;
+        SyncedSlabSettings syncedSlabSettings = ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.getOrDefault(minecraft.player,
+                SyncedSlabSettings.EMPTY);
+        destroySlabType = syncedSlabSettings.getSlabType(minecraft.player,
+                minecraft.level.getBlockState(blockPos),
+                blockPos,
+                minecraft.hitResult.getLocation());
     }
 
     public static @Nullable SlabType getSlabType(Player player, BlockState blockState) {
@@ -78,7 +90,6 @@ public class BlockDestroyingHandler {
 
     public static boolean isSameDestroyTarget(BlockPos blockPos, Player player, ClientLevel clientLevel, HitResult hitResult) {
         BlockState blockState = clientLevel.getBlockState(blockPos);
-        SlabType destroySlabType = BlockDestroyingHandler.getSlabType(player, blockState);
         SyncedSlabSettings syncedSlabSettings = ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.getOrDefault(player,
                 SyncedSlabSettings.EMPTY);
         SlabType slabType = syncedSlabSettings.getSlabType(player, blockState, blockPos, hitResult.getLocation());
