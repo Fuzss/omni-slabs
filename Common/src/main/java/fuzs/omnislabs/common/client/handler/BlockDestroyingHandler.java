@@ -37,8 +37,8 @@ public class BlockDestroyingHandler {
 
     public static EventResult onAttackBlock(Player player, Level level, InteractionHand interactionHand, BlockPos blockPos, Direction direction) {
         if (level.isClientSide()) {
-            Minecraft minecraft = Minecraft.getInstance();
-            Vec3 hitVector = minecraft.hitResult.getLocation();
+            HitResult hitResult = Minecraft.getInstance().hitResult;
+            Vec3 hitVector = hitResult.getLocation();
             SyncedSlabSettings.setHitVector(player, hitVector);
             MessageSender.broadcast(new ServerboundHitVectorMessage(hitVector));
             destroyBlockPos = blockPos;
@@ -47,15 +47,14 @@ public class BlockDestroyingHandler {
         return EventResult.PASS;
     }
 
-    public static void onStartDestroy(BlockPos blockPos) {
-        Minecraft minecraft = Minecraft.getInstance();
+    public static void onStartDestroy(BlockPos blockPos, Player player, ClientLevel clientLevel, HitResult hitResult) {
         destroyBlockPos = blockPos;
-        SyncedSlabSettings syncedSlabSettings = ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.getOrDefault(minecraft.player,
+        SyncedSlabSettings syncedSlabSettings = ModRegistry.SYNCED_SLAB_SETTINGS_ATTACHMENT_TYPE.getOrDefault(player,
                 SyncedSlabSettings.EMPTY);
-        destroySlabType = syncedSlabSettings.getSlabType(minecraft.player,
-                minecraft.level.getBlockState(blockPos),
+        destroySlabType = syncedSlabSettings.getSlabType(player,
+                clientLevel.getBlockState(blockPos),
                 blockPos,
-                minecraft.hitResult.getLocation());
+                hitResult.getLocation());
     }
 
     public static @Nullable SlabType getSlabType(Player player, BlockState blockState) {

@@ -34,7 +34,10 @@ abstract class MultiPlayerGameModeMixin {
     @Inject(method = "startDestroyBlock", at = @At("RETURN"))
     private void startDestroyBlock(BlockPos pos, Direction direction, CallbackInfoReturnable<Boolean> callback) {
         if (this.isDestroying && pos.equals(this.destroyBlockPos)) {
-            BlockDestroyingHandler.onStartDestroy(pos);
+            BlockDestroyingHandler.onStartDestroy(pos,
+                    this.minecraft.player,
+                    this.minecraft.level,
+                    this.minecraft.hitResult);
         }
     }
 }
