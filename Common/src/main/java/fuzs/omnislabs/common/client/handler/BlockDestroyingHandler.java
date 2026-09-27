@@ -24,7 +24,6 @@ import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.phys.HitResult;
-import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
@@ -35,14 +34,16 @@ public class BlockDestroyingHandler {
 
     public static EventResult onAttackBlock(Player player, Level level, InteractionHand interactionHand, BlockPos blockPos, Direction direction) {
         if (level.isClientSide()) {
-            Minecraft minecraft = Minecraft.getInstance();
-            Vec3 hitVector = minecraft.hitResult.getLocation();
-            SyncedSlabSettings.setHitVector(player, hitVector);
-            MessageSender.broadcast(new ServerboundHitVectorMessage(hitVector));
-            destroyBlockPos = blockPos;
+            MessageSender.broadcast(new ServerboundHitVectorMessage(Minecraft.getInstance().hitResult.getLocation()));
         }
 
         return EventResult.PASS;
+    }
+
+    public static void onStartDestroy(BlockPos blockPos) {
+        Minecraft minecraft = Minecraft.getInstance();
+        SyncedSlabSettings.setHitVector(minecraft.player, minecraft.hitResult.getLocation());
+        destroyBlockPos = blockPos;
     }
 
     public static @Nullable SlabType getSlabType(Player player, BlockState blockState) {
